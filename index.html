@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="author" content="@blau_mark">
+<title>Дедлайны ИТМО</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
+    background: #0f0f14; color: #eaeaea;
+    min-height: 100vh; overflow-x: hidden;
+    display: flex; justify-content: center;
+  }
+
+  * { scrollbar-width: none; -ms-overflow-style: none; }
+  *::-webkit-scrollbar { display: none; }
+
+  #app {
+    display: flex; width: 100%; max-width: 1100px;
+    transition: transform 0.35s ease;
+    position: relative;
+  }
+  #app.shifted { transform: translateX(-80px); }
+
+  #calendar-col {
+    flex: 1; padding: 16px;
+    max-width: 500px; margin: 0 auto;
+  }
+
+  header {
+    display: flex; justify-content: space-between; align-items: flex-start;
+    padding: 12px 0; margin-bottom: 12px;
+  }
+  header h1 { font-size: 20px; font-weight: 600; }
+  header .sig { font-size: 11px; color: #6c6c78; margin-top: 2px; }
+  header .logo {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: linear-gradient(135deg, #4a90e2, #8b5cf6);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; font-weight: 700;
+  }
+
+  .month-nav {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 12px; padding: 0 4px;
+  }
+  .month-nav button {
+    background: #1c1c24; border: 1px solid #2a2a34;
+    color: #eaeaea; width: 36px; height: 36px;
+    border-radius: 10px; font-size: 16px; cursor: pointer;
+  }
+  .month-nav button:hover { background: #252530; }
+  .month-nav .title { font-size: 16px; font-weight: 600; }
+
+  .weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 8px;
+  }
+  .weekdays div {
+    text-align: center; font-size: 11px; color: #6c6c78;
+    padding: 4px 0; text-transform: uppercase;
+  }
+
+  .days {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 20px;
+  }
+  .day {
+    aspect-ratio: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    border-radius: 10px; cursor: pointer;
+    font-size: 14px; position: relative;
+    background: #16161d;
+    transition: background 0.15s, opacity 0.15s, border-color 0.15s;
+    border: 1.5px solid transparent;
+  }
+  .day:hover { background: #1f1f28; }
+  .day.empty { background: transparent; cursor: default; border: none; }
+  .day.past { opacity: 0.35; }
+  .day.today { border-color: #5a5a66; }
+  .day.selected { border-color: #4a90e2; }
+  .day.has-tasks { background: #1a1a24; }
+
+  .day .dots {
+    position: absolute; bottom: 3px;
+    left: 50%; transform: translateX(-50%);
+    display: flex; flex-direction: row;
+    gap: 2px;
+  }
+  .day .dots .dot {
+    width: 5px; height: 5px; border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .dot.p1 { background: #e74c3c; }
+  .dot.p2 { background: #f1c40f; }
+  .dot.p3 { background: #4a90e2; }
+
+  .day .num { z-index: 1; }
+
+  .tasks-title {
+    font-size: 14px; color: #8a8a96; margin-bottom: 8px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .tasks-title button {
+    background: #4a90e2; border: none; color: #fff;
+    padding: 6px 12px; border-radius: 8px; font-size: 13px;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .tasks-title button:hover:not(:disabled) { background: #5a9ff2; }
+  .tasks-title button:disabled {
+    background: #2a2a34; color: #6c6c78; cursor: not-allowed;
+  }
+
+  .tasks { display: flex; flex-direction: column; gap: 8px; }
+  .task {
+    background: #1c1c24; border-radius: 12px; padding: 14px;
+    border-left: 3px solid #4a90e2;
+    display: flex; justify-content: space-between; align-items: center;
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .task.p1 { border-left-color: #e74c3c; }
+  .task.p2 { border-left-color: #f1c40f; }
+  .task.p3 { border-left-color: #4a90e2; }
+  .task:hover { background: #22222c; }
+  .task .info { flex: 1; }
+  .task .name { font-size: 14px; font-weight: 600; }
+  .task .del {
+    background: none; border: none; color: #6c6c78;
+    font-size: 20px; cursor: pointer; padding: 0 6px;
+  }
+  .task .del:hover { color: #e74c3c; }
+
+  .footer {
+    text-align: center; font-size: 11px;
+    color: #4a4a55; padding: 24px 0 8px;
+  }
+
+  #detail-panel {
+    position: fixed; top: 0; right: 0;
+    width: 340px; height: 100vh;
+    background: #16161d;
+    border-left: 1px solid #2a2a34;
+    padding: 20px;
+    transform: translateX(100%);
+    transition: transform 0.35s ease;
+    overflow-y: auto;
+    z-index: 50;
+  }
+  #detail-panel.open { transform: translateX(0); }
+  #detail-panel .close {
+    background: none; border: none; color: #6c6c78;
+    font-size: 24px; cursor: pointer; float: right;
+  }
+  #detail-panel .close:hover { color: #eaeaea; }
+  #detail-panel h2 {
+    font-size: 18px; font-weight: 600; margin-bottom: 4px;
+  }
+  #detail-panel .sub {
+    font-size: 13px; color: #8a8a96; margin-bottom: 20px;
+  }
+  #detail-panel .detail-subject {
+    font-size: 13px; color: #8a8a96; margin-bottom: 4px;
+  }
+  #detail-panel .detail-name {
+    font-size: 16px; font-weight: 600; margin-bottom: 16px;
+    white-space: pre-wrap;
+  }
+  #detail-panel .links-title {
+    font-size: 12px; color: #8a8a96; margin-bottom: 8px;
+    text-transform: uppercase;
+  }
+  #detail-panel .links-list {
+    display: flex; flex-direction: column; gap: 6px;
+    margin-bottom: 20px;
+  }
+  #detail-panel .link-item {
+    color: #4a90e2; text-decoration: none;
+    font-size: 14px; padding: 6px 0;
+    word-break: break-all;
+  }
+  #detail-panel .link-item:hover { text-decoration: underline; }
+  #detail-panel .link-num {
+    color: #6c6c78; margin-right: 6px;
+  }
+  #detail-panel .edit-btn {
+    background: #2a2a34; border: none; color: #eaeaea;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+    margin-right: 8px;
+  }
+  #detail-panel .edit-btn:hover { background: #3a3a44; }
+  #detail-panel .del-btn {
+    background: #2a2a34; border: none; color: #e74c3c;
+    padding: 8px 14px; border-radius: 8px;
+    font-size: 13px; cursor: pointer; font-family: inherit;
+  }
+  #detail-panel .del-btn:hover { background: #3a1515; }
+
+  .modal-bg {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+    display: none; align-items: center; justify-content: center;
+    padding: 20px; z-index: 100;
+  }
+  .modal-bg.open { display: flex; }
+  .modal {
+    background: #1c1c24; border-radius: 16px;
+    padding: 20px; width: 100%; max-width: 420px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal h3 { margin-bottom: 14px; font-size: 16px; }
+  .modal label { font-size: 12px; color: #8a8a96; display: block; margin-bottom: 4px; margin-top: 8px; }
+  .modal input, .modal textarea {
+    width: 100%; padding: 10px 12px;
+    background: #0f0f14; border: 1px solid #2a2a34;
+    color: #eaeaea; border-radius: 10px; font-size: 14px;
+    font-family: inherit;
+  }
+  .modal textarea {
+    min-height: 90px;
+    max-height: 300px;
+    overflow-y: auto;
+    line-height: 1.6;
+    resize: none;
+  }
+  .modal input:focus, .modal textarea:focus { outline: none; border-color: #4a90e2; }
+
+  .prio-row { display: flex; gap: 6px; margin-top: 6px; }
+  .prio-btn {
+    flex: 1; padding: 8px 4px; border-radius: 10px;
+    background: #0f0f14; border: 1px solid #2a2a34;
+    color: #8a8a96; font-size: 13px; cursor: pointer;
+    font-family: inherit;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .prio-btn:hover { background: #1a1a24; }
+  .prio-btn.active { color: #eaeaea; }
+  .prio-btn.active[data-p="1"] { border-color: #e74c3c; background: #3a1515; }
+  .prio-btn.active[data-p="2"] { border-color: #f1c40f; background: #3a3115; }
+  .prio-btn.active[data-p="3"] { border-color: #4a90e2; background: #1a2a40; }
+  .prio-dot { width: 8px; height: 8px; border-radius: 50%; }
+  .prio-dot.p1 { background: #e74c3c; }
+  .prio-dot.p2 { background: #f1c40f; }
+  .prio-dot.p3 { background: #4a90e2; }
+
+  .modal .actions { display: flex; gap: 8px; margin-top: 16px; }
+  .modal .actions button {
+    flex: 1; padding: 10px; border-radius: 10px;
+    font-size: 14px; cursor: pointer; font-family: inherit;
+    border: none;
+  }
+  .modal .actions .cancel { background: #2a2a34; color: #eaeaea; }
+  .modal .actions .save { background: #4a90e2; color: #fff; }
+
+  @media (max-width: 1200px) {
+    #app.shifted { transform: translateY(-200px); }
+    #detail-panel {
+      top: auto; bottom: 0; right: 0; left: 0;
+      width: 100%; height: 60vh;
+      border-left: none; border-top: 1px solid #2a2a34;
+      border-radius: 20px 20px 0 0;
+      transform: translateY(100%);
+    }
+    #detail-panel.open { transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div id="calendar-col">
+    <header>
+      <div>
+        <h1>Дедлайны ИТМО</h1>
+        <div class="sig">by @blau_mark</div>
+      </div>
+      <div class="logo">ИТ</div>
+    </header>
+
+    <div class="month-nav">
+      <button id="prev">◀</button>
+      <div class="title" id="month-title">—</div>
+      <button id="next">▶</button>
+    </div>
+
+    <div class="weekdays">
+      <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
+    </div>
+
+    <div class="days" id="days"></div>
+
+    <div class="tasks-title">
+      <span id="selected-date">Выбери день</span>
+      <button id="add-btn">+ Добавить</button>
+    </div>
+
+    <div class="tasks" id="tasks"></div>
+
+    <div class="footer">© 2026 · @blau_mark</div>
+  </div>
+</div>
+
+<div id="detail-panel">
+  <button class="close" id="close-panel">×</button>
+  <div id="panel-content"></div>
+</div>
+
+<div class="modal-bg" id="modal-bg">
+  <div class="modal">
+    <h3 id="modal-title">Новый дедлайн</h3>
+    <label>Предмет</label>
+    <input id="in-subject" placeholder="Дискретная математика">
+    <label>Задание</label>
+    <textarea id="in-name" placeholder="Лаба №3"></textarea>
+    <label>Ссылки</label>
+    <textarea id="in-links" placeholder="https://disk.yandex.ru/xxx"></textarea>
+
+    <label style="margin-top:12px;">Приоритет</label>
+    <div class="prio-row" id="prio-row">
+      <button type="button" class="prio-btn active" data-p="3">
+        <span class="prio-dot p3"></span>Обычный
+      </button>
+      <button type="button" class="prio-btn" data-p="2">
+        <span class="prio-dot p2"></span>Важно
+      </button>
+      <button type="button" class="prio-btn" data-p="1">
+        <span class="prio-dot p1"></span>Горит
+      </button>
+    </div>
+
+    <div class="actions">
+      <button class="cancel" id="cancel">Отмена</button>
+      <button class="save" id="save">Сохранить</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const STORAGE_KEY = 'itmo_deadlines_v3';
+  let deadlines = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+
+  const today = new Date(); today.setHours(0,0,0,0);
+  let currentMonth = today.getMonth();
+  let currentYear = today.getFullYear();
+  let selectedDate = null;
+  let openTaskItem = null;
+  let selectedPriority = 3;
+  let editingItem = null;
+
+  const daysEl = document.getElementById('days');
+  const monthTitle = document.getElementById('month-title');
+  const tasksEl = document.getElementById('tasks');
+  const selectedDateEl = document.getElementById('selected-date');
+  const addBtn = document.getElementById('add-btn');
+  const modalBg = document.getElementById('modal-bg');
+  const modalTitle = document.getElementById('modal-title');
+  const inSubject = document.getElementById('in-subject');
+  const inName = document.getElementById('in-name');
+  const inLinks = document.getElementById('in-links');
+  const appEl = document.getElementById('app');
+  const panel = document.getElementById('detail-panel');
+  const panelContent = document.getElementById('panel-content');
+  const prioRow = document.getElementById('prio-row');
+
+  const MONTHS = ['Января','Февраля','Марта','Апреля','Мая','Июня','Июля','Августа','Сентября','Октября','Ноября','Декабря'];
+  const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+
+  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines)); }
+  function fmt(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+  function parseLinks(raw) {
+    if (!raw) return [];
+    return raw.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
+      let m = line.match(/^\[?([^\]]+)\]?\(([^)]+)\)$/);
+      if (m) return { name: m[1].trim(), url: m[2].trim() };
+      m = line.match(/^(.+?)\s*\|\s*(.+)$/);
+      if (m) return { name: m[1].trim(), url: m[2].trim() };
+      return { name: line, url: line };
+    });
+  }
+
+  function linksToString(links) {
+    if (!links || links.length === 0) return '';
+    return links.map(l => l.name === l.url ? l.url : `[${l.name}](${l.url})`).join('\n');
+  }
+
+  function sortByPriority(items) {
+    return [...items].sort((a, b) => (a.priority || 3) - (b.priority || 3));
+  }
+
+  function renderCalendar() {
+    daysEl.innerHTML = '';
+    monthTitle.textContent = `${MONTHS_NOM[currentMonth]} ${currentYear}`;
+
+    const first = new Date(currentYear, currentMonth, 1);
+    const startDay = (first.getDay() + 6) % 7;
+    const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+
+    for (let i = 0; i < startDay; i++) {
+      const cell = document.createElement('div');
+      cell.className = 'day empty';
+      daysEl.appendChild(cell);
+    }
+
+    for (let d = 1; d <= daysInMonth; d++) {
+      const cell = document.createElement('div');
+      const dateStr = fmt(currentYear, currentMonth, d);
+      const cellDate = new Date(dateStr); cellDate.setHours(0,0,0,0);
+
+      cell.className = 'day';
+      if (cellDate < today) cell.classList.add('past');
+      if (dateStr === fmt(today.getFullYear(), today.getMonth(), today.getDate())) cell.classList.add('today');
+      if (dateStr === selectedDate) cell.classList.add('selected');
+
+      const items = deadlines.filter(x => x.date === dateStr);
+      if (items.length > 0) cell.classList.add('has-tasks');
+
+      cell.innerHTML = `<span class="num">${d}</span>`;
+
+      if (items.length > 0) {
+        const sorted = sortByPriority(items);
+        const dotsCount = Math.min(sorted.length, 5);
+        const dots = document.createElement('div');
+        dots.className = 'dots';
+        for (let i = 0; i < dotsCount; i++) {
+          const dot = document.createElement('span');
+          dot.className = 'dot p' + (sorted[i].priority || 3);
+          dots.appendChild(dot);
+        }
+        cell.appendChild(dots);
+      }
+
+      cell.addEventListener('click', () => {
+        selectedDate = dateStr;
+        renderCalendar();
+        renderTasks();
+      });
+
+      daysEl.appendChild(cell);
+    }
+  }
+
+  function renderTasks() {
+    tasksEl.innerHTML = '';
+
+    if (!selectedDate) {
+      selectedDateEl.textContent = 'Выбери день';
+      addBtn.disabled = true;
+      return;
+    }
+
+    const d = new Date(selectedDate);
+    const isPast = d < today;
+    addBtn.disabled = isPast;
+    addBtn.title = isPast ? 'Нельзя добавить в прошедший день' : '';
+
+    selectedDateEl.textContent = `${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}`;
+
+    const items = sortByPriority(deadlines.filter(x => x.date === selectedDate));
+    if (items.length === 0) {
+      if (openTaskItem) closePanel();
+      return;
+    }
+
+    if (openTaskItem) {
+      openPanel(items[0]);
+    }
+
+    items.forEach((item) => {
+      const el = document.createElement('div');
+      el.className = 'task p' + (item.priority || 3);
+      el.innerHTML = `
+        <div class="info">
+          <div class="name">${escapeHtml(item.subject)}</div>
+        </div>
+        <button class="del" data-idx="${deadlines.indexOf(item)}">×</button>
+      `;
+      el.addEventListener('click', (e) => {
+        if (e.target.classList.contains('del')) return;
+        if (openTaskItem === item) closePanel();
+        else openPanel(item);
+      });
+      tasksEl.appendChild(el);
+    });
+
+    tasksEl.querySelectorAll('.del').forEach(btn => {
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const idx = +e.target.dataset.idx;
+        deadlines.splice(idx, 1);
+        save();
+        renderCalendar();
+        renderTasks();
+        closePanel();
+      });
+    });
+  }
+
+  function openPanel(item) {
+    openTaskItem = item;
+    const d = new Date(item.date);
+    const links = item.links || [];
+    const prio = item.priority || 3;
+    const prioLabels = { 1: 'Горит', 2: 'Важно', 3: 'Обычный' };
+
+    let linksHtml = '';
+    if (links.length > 0) {
+      linksHtml = `
+        <div class="links-title">🔗 Ссылки</div>
+        <div class="links-list">
+          ${links.map((l, i) => `<a class="link-item" href="${escapeAttr(l.url)}" target="_blank"><span class="link-num">[${i+1}]</span>${escapeHtml(l.name)}</a>`).join('')}
+        </div>
+      `;
+    }
+
+    panelContent.innerHTML = `
+      <h2>${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}</h2>
+      <div class="sub">${d.getFullYear()}</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+        <span class="prio-dot p${prio}"></span>
+        <span style="font-size:12px;color:#8a8a96;">${prioLabels[prio]}</span>
+      </div>
+      <div class="detail-subject">${escapeHtml(item.subject)}</div>
+      <div class="detail-name">${escapeHtml(item.name)}</div>
+      ${linksHtml}
+      <div style="margin-top:16px;">
+        <button class="edit-btn" id="edit-btn">Редактировать</button>
+        <button class="del-btn" id="del-btn">Удалить</button>
+      </div>
+    `;
+    panel.classList.add('open');
+    appEl.classList.add('shifted');
+
+    document.getElementById('edit-btn').addEventListener('click', () => {
+      openModal(item);
+    });
+    document.getElementById('del-btn').addEventListener('click', () => {
+      const idx = deadlines.indexOf(item);
+      if (idx >= 0) deadlines.splice(idx, 1);
+      save();
+      renderCalendar();
+      renderTasks();
+      closePanel();
+    });
+  }
+
+  function closePanel() {
+    openTaskItem = null;
+    panel.classList.remove('open');
+    appEl.classList.remove('shifted');
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+
+  function autoGrow(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 300) + 'px';
+  }
+  inName.addEventListener('input', () => autoGrow(inName));
+  inLinks.addEventListener('input', () => autoGrow(inLinks));
+
+  function resetModal() {
+    inSubject.value = '';
+    inName.value = '';
+    inLinks.value = '';
+    inName.style.height = '';
+    inLinks.style.height = '';
+    selectedPriority = 3;
+    prioRow.querySelectorAll('.prio-btn').forEach(b => {
+      b.classList.toggle('active', b.dataset.p === '3');
+    });
+  }
+
+  function openModal(item) {
+    if (item) {
+      editingItem = item;
+      modalTitle.textContent = 'Редактировать дедлайн';
+      inSubject.value = item.subject || '';
+      inName.value = item.name || '';
+      inLinks.value = linksToString(item.links);
+      selectedPriority = item.priority || 3;
+      prioRow.querySelectorAll('.prio-btn').forEach(b => {
+        b.classList.toggle('active', +b.dataset.p === selectedPriority);
+      });
+      setTimeout(() => {
+        autoGrow(inName);
+        autoGrow(inLinks);
+      }, 0);
+    } else {
+      editingItem = null;
+      modalTitle.textContent = 'Новый дедлайн';
+      resetModal();
+    }
+    modalBg.classList.add('open');
+    inSubject.focus();
+  }
+
+  prioRow.addEventListener('click', e => {
+    const btn = e.target.closest('.prio-btn');
+    if (!btn) return;
+    prioRow.querySelectorAll('.prio-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    selectedPriority = +btn.dataset.p;
+  });
+
+  document.getElementById('prev').addEventListener('click', () => {
+    currentMonth--;
+    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+    renderCalendar();
+  });
+  document.getElementById('next').addEventListener('click', () => {
+    currentMonth++;
+    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+    renderCalendar();
+  });
+
+  addBtn.addEventListener('click', () => {
+    if (!selectedDate) { alert('Сначала выбери день в календаре'); return; }
+    if (addBtn.disabled) return;
+    openModal(null);
+  });
+  document.getElementById('cancel').addEventListener('click', () => {
+    modalBg.classList.remove('open');
+    editingItem = null;
+  });
+  document.getElementById('save').addEventListener('click', () => {
+    const subject = inSubject.value.trim();
+    const name = inName.value.trim();
+    if (!subject || !name) { alert('Заполни предмет и задание'); return; }
+    const links = parseLinks(inLinks.value);
+
+    if (editingItem) {
+      editingItem.subject = subject;
+      editingItem.name = name;
+      editingItem.links = links;
+      editingItem.priority = selectedPriority;
+    } else {
+      deadlines.push({
+        date: selectedDate,
+        subject, name, links,
+        priority: selectedPriority
+      });
+    }
+
+    save();
+    modalBg.classList.remove('open');
+    editingItem = null;
+    renderCalendar();
+    renderTasks();
+    if (openTaskItem) openPanel(openTaskItem);
+  });
+
+  document.getElementById('close-panel').addEventListener('click', closePanel);
+
+  selectedDate = fmt(today.getFullYear(), today.getMonth(), today.getDate());
+  renderCalendar();
+  renderTasks();
+</script>
+</body>
+</html>

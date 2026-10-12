@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <meta name="author" content="@blau_mark">
 <title>Дедлайны ИТМО</title>
 <style>
@@ -162,9 +162,6 @@
   #detail-panel .sub {
     font-size: 13px; color: #8a8a96; margin-bottom: 20px;
   }
-  #detail-panel .detail-subject {
-    font-size: 13px; color: #8a8a96; margin-bottom: 4px;
-  }
   #detail-panel .detail-name {
     font-size: 16px; font-weight: 600; margin-bottom: 16px;
     white-space: pre-wrap;
@@ -257,10 +254,11 @@
   .modal .actions .save { background: #4a90e2; color: #fff; }
 
   @media (max-width: 1200px) {
-    #app.shifted { transform: translateY(-200px); }
+    #calendar-col { transition: transform 0.35s ease; }
+    #app.shifted #calendar-col { transform: translateY(-40vh); }
     #detail-panel {
       top: auto; bottom: 0; right: 0; left: 0;
-      width: 100%; height: 60vh;
+      width: 100%; height: 45vh;
       border-left: none; border-top: 1px solid #2a2a34;
       border-radius: 20px 20px 0 0;
       transform: translateY(100%);
@@ -504,8 +502,6 @@
     openTaskItem = item;
     const d = new Date(item.date);
     const links = item.links || [];
-    const prio = item.priority || 3;
-    const prioLabels = { 1: 'Горит', 2: 'Важно', 3: 'Обычный' };
 
     let linksHtml = '';
     if (links.length > 0) {
@@ -520,11 +516,6 @@
     panelContent.innerHTML = `
       <h2>${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}</h2>
       <div class="sub">${d.getFullYear()}</div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
-        <span class="prio-dot p${prio}"></span>
-        <span style="font-size:12px;color:#8a8a96;">${prioLabels[prio]}</span>
-      </div>
-      <div class="detail-subject">${escapeHtml(item.subject)}</div>
       <div class="detail-name">${escapeHtml(item.name)}</div>
       ${linksHtml}
       <div style="margin-top:16px;">

@@ -140,6 +140,7 @@
     color: #4a4a55; padding: 24px 0 8px;
   }
 
+  /* ===== ПАНЕЛЬ ===== */
   #detail-panel {
     position: fixed; top: 0; right: 0;
     width: 340px; height: 100vh;
@@ -148,32 +149,53 @@
     padding: 20px;
     transform: translateX(100%);
     transition: transform 0.35s ease;
-    overflow-y: auto;
     z-index: 50;
+    display: flex;
+    flex-direction: column;
   }
   #detail-panel.open { transform: translateX(0); }
+
+  #panel-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    min-height: 0;
+  }
+
+  #panel-scroll {
+    flex: 1;
+    overflow-y: auto;
+    min-height: 0;
+  }
+
+  #panel-actions {
+    flex-shrink: 0;
+    padding-top: 16px;
+    border-top: 1px solid #22222c;
+    margin-top: 12px;
+  }
+
   #detail-panel .close {
     background: none; border: none; color: #6c6c78;
     font-size: 24px; cursor: pointer; float: right;
+    margin-left: auto;
+    position: absolute;
+    top: 16px; right: 16px;
   }
   #detail-panel .close:hover { color: #eaeaea; }
+
   #detail-panel h2 {
     font-size: 18px; font-weight: 600; margin-bottom: 4px;
-  }
-  #detail-panel .sub {
-    font-size: 13px; color: #8a8a96; margin-bottom: 20px;
+    padding-right: 30px;
   }
   #detail-panel .detail-name {
     font-size: 16px; font-weight: 600; margin-bottom: 16px;
     white-space: pre-wrap;
   }
-  #detail-panel .links-title {
-    font-size: 12px; color: #8a8a96; margin-bottom: 8px;
-    text-transform: uppercase;
-  }
   #detail-panel .links-list {
     display: flex; flex-direction: column; gap: 6px;
-    margin-bottom: 20px;
+    margin-bottom: 8px;
   }
   #detail-panel .link-item {
     color: #4a90e2; text-decoration: none;
@@ -305,7 +327,10 @@
 
 <div id="detail-panel">
   <button class="close" id="close-panel">×</button>
-  <div id="panel-content"></div>
+  <div id="panel-content">
+    <div id="panel-scroll"></div>
+    <div id="panel-actions"></div>
+  </div>
 </div>
 
 <div class="modal-bg" id="modal-bg">
@@ -362,7 +387,8 @@
   const inLinks = document.getElementById('in-links');
   const appEl = document.getElementById('app');
   const panel = document.getElementById('detail-panel');
-  const panelContent = document.getElementById('panel-content');
+  const panelScroll = document.getElementById('panel-scroll');
+  const panelActions = document.getElementById('panel-actions');
   const prioRow = document.getElementById('prio-row');
 
   const MONTHS = ['Января','Февраля','Марта','Апреля','Мая','Июня','Июля','Августа','Сентября','Октября','Ноября','Декабря'];
@@ -507,23 +533,23 @@
     let linksHtml = '';
     if (links.length > 0) {
       linksHtml = `
-        <div class="links-title">🔗 Ссылки</div>
         <div class="links-list">
           ${links.map((l, i) => `<a class="link-item" href="${escapeAttr(l.url)}" target="_blank"><span class="link-num">[${i+1}]</span>${escapeHtml(l.name)}</a>`).join('')}
         </div>
       `;
     }
 
-    panelContent.innerHTML = `
+    panelScroll.innerHTML = `
       <h2>${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}</h2>
-      <div class="sub">${d.getFullYear()}</div>
       <div class="detail-name">${escapeHtml(item.name)}</div>
       ${linksHtml}
-      <div style="margin-top:16px;">
-        <button class="edit-btn" id="edit-btn">Редактировать</button>
-        <button class="del-btn" id="del-btn">Удалить</button>
-      </div>
     `;
+
+    panelActions.innerHTML = `
+      <button class="edit-btn" id="edit-btn">Редактировать</button>
+      <button class="del-btn" id="del-btn">Удалить</button>
+    `;
+
     panel.classList.add('open');
     appEl.classList.add('shifted');
 

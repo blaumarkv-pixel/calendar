@@ -12,6 +12,7 @@
     background: #0f0f14; color: #eaeaea;
     min-height: 100vh; overflow-x: hidden;
     display: flex; justify-content: center;
+    zoom: 1.1;
   }
 
   * { scrollbar-width: none; -ms-overflow-style: none; }
@@ -254,6 +255,7 @@
   .modal .actions .save { background: #4a90e2; color: #fff; }
 
   @media (max-width: 1200px) {
+    body { zoom: 1; }
     #app.shifted { transform: translateY(-55vh); }
     #detail-panel {
       top: auto; bottom: 0; right: 0; left: 0;

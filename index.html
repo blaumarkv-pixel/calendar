@@ -140,7 +140,7 @@
     color: #4a4a55; padding: 24px 0 8px;
   }
 
-  /* ===== ПАНЕЛЬ — клик для редактирования ===== */
+  /* ===== ПАНЕЛЬ ===== */
   #detail-panel {
     position: fixed; top: 0; right: 0;
     width: 340px; height: 100vh;
@@ -151,7 +151,6 @@
     transition: transform 0.35s ease;
     overflow-y: auto;
     z-index: 50;
-    cursor: pointer;
   }
   #detail-panel.open { transform: translateX(0); }
 
@@ -189,6 +188,20 @@
     color: #6c6c78; margin-right: 6px;
   }
 
+  /* Кнопки в панели */
+  .panel-actions {
+    display: flex; gap: 8px; margin-top: 20px;
+  }
+  .panel-actions button {
+    flex: 1; padding: 10px; border-radius: 10px;
+    font-size: 14px; cursor: pointer; font-family: inherit;
+    border: none; transition: background 0.15s;
+  }
+  .panel-actions .edit { background: #4a90e2; color: #fff; }
+  .panel-actions .edit:hover { background: #5a9ff2; }
+  .panel-actions .delete { background: #3a1515; color: #e74c3c; }
+  .panel-actions .delete:hover { background: #4a1a1a; }
+
   .hint {
     font-size: 11px;
     color: #4a4a55;
@@ -208,7 +221,6 @@
     background: #1c1c24; border-radius: 16px;
     padding: 20px; width: 100%; max-width: 420px;
     max-height: 90vh; overflow-y: auto;
-    cursor: default;
   }
   .modal h3 { margin-bottom: 14px; font-size: 16px; }
   .modal label { font-size: 12px; color: #8a8a96; display: block; margin-bottom: 4px; margin-top: 8px; }
@@ -310,7 +322,7 @@
 </div>
 
 <div class="modal-bg" id="modal-bg">
-  <div class="modal">
+  <div class="modal" id="modal">
     <h3 id="modal-title">Новый дедлайн</h3>
     <label>Предмет</label>
     <input id="in-subject" placeholder="Дискретная математика">
@@ -340,16 +352,71 @@
 </div>
 
 <script>
-  const STORAGE_KEY = 'itmo_deadlines_v3';
-  let deadlines = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+  'use strict';
 
+  const STORAGE_KEY = 'itmo_deadlines_v3';
+  const ALLOWED_PROTOCOLS = ['http:', 'https:'];
+
+  // ===== Хранилище =====
+  // Каждому дедлайну присваиваем стабильный уникальный id.
+  // Раньше индекс в массиве использовался как идентификатор — это хрупко.
+  let deadlines = loadDeadlines();
+
+  function loadDeadlines() {
+    try {
+      const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
+      if (!Array.isArray(raw)) return [];
+      return raw
+        .filter(x => x && typeof x === 'object')
+        .map(x => ({
+          id: typeof x.id === 'string' ? x.id : uid(),
+          date: String(x.date || ''),
+          subject: String(x.subject || ''),
+          name: String(x.name || ''),
+          links: Array.isArray(x.links) ? x.links.map(normalizeLink).filter(Boolean) : [],
+          priority: [1, 2, 3].includes(x.priority) ? x.priority : 3
+        }))
+        .filter(x => x.date);
+    } catch {
+      return [];
+    }
+  }
+
+  function uid() {
+    return 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+  }
+
+  function normalizeLink(l) {
+    if (!l || typeof l !== 'object') return null;
+    const name = String(l.name || '').trim();
+    const url = String(l.url || '').trim();
+    if (!name && !url) return null;
+    return { name: name || url, url: url || name };
+  }
+
+  function save() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines));
+  }
+
+  function findById(id) {
+    return deadlines.find(x => x.id === id) || null;
+  }
+
+  function removeById(id) {
+    const i = deadlines.findIndex(x => x.id === id);
+    if (i === -1) return false;
+    deadlines.splice(i, 1);
+    return true;
+  }
+
+  // ===== Утилиты =====
   const today = new Date(); today.setHours(0,0,0,0);
   let currentMonth = today.getMonth();
   let currentYear = today.getFullYear();
   let selectedDate = null;
-  let openTaskItem = null;
+  let openTaskId = null;      // теперь храним id, а не ссылку на объект
   let selectedPriority = 3;
-  let editingItem = null;
+  let editingId = null;       // id редактируемого, а не ссылка
 
   const daysEl = document.getElementById('days');
   const monthTitle = document.getElementById('month-title');
@@ -357,6 +424,7 @@
   const selectedDateEl = document.getElementById('selected-date');
   const addBtn = document.getElementById('add-btn');
   const modalBg = document.getElementById('modal-bg');
+  const modalEl = document.getElementById('modal');
   const modalTitle = document.getElementById('modal-title');
   const inSubject = document.getElementById('in-subject');
   const inName = document.getElementById('in-name');
@@ -369,18 +437,29 @@
   const MONTHS = ['Января','Февраля','Марта','Апреля','Мая','Июня','Июля','Августа','Сентября','Октября','Ноября','Декабря'];
   const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
 
-  function save() { localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines)); }
   function fmt(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+
+  // ===== Безопасная работа с URL =====
+  function safeUrl(raw) {
+    if (!raw) return null;
+    try {
+      const u = new URL(raw, location.href);
+      if (!ALLOWED_PROTOCOLS.includes(u.protocol)) return null;
+      return u.href;
+    } catch {
+      return null;
+    }
+  }
 
   function parseLinks(raw) {
     if (!raw) return [];
     return raw.split('\n').map(line => line.trim()).filter(Boolean).map(line => {
       let m = line.match(/^\[?([^\]]+)\]?\(([^)]+)\)$/);
-      if (m) return { name: m[1].trim(), url: m[2].trim() };
+      if (m) return normalizeLink({ name: m[1].trim(), url: m[2].trim() });
       m = line.match(/^(.+?)\s*\|\s*(.+)$/);
-      if (m) return { name: m[1].trim(), url: m[2].trim() };
-      return { name: line, url: line };
-    });
+      if (m) return normalizeLink({ name: m[1].trim(), url: m[2].trim() });
+      return normalizeLink({ name: line, url: line });
+    }).filter(Boolean);
   }
 
   function linksToString(links) {
@@ -392,6 +471,7 @@
     return [...items].sort((a, b) => (a.priority || 3) - (b.priority || 3));
   }
 
+  // ===== Рендер календаря =====
   function renderCalendar() {
     daysEl.innerHTML = '';
     monthTitle.textContent = `${MONTHS_NOM[currentMonth]} ${currentYear}`;
@@ -419,7 +499,10 @@
       const items = deadlines.filter(x => x.date === dateStr);
       if (items.length > 0) cell.classList.add('has-tasks');
 
-      cell.innerHTML = `<span class="num">${d}</span>`;
+      const num = document.createElement('span');
+      num.className = 'num';
+      num.textContent = d;
+      cell.appendChild(num);
 
       if (items.length > 0) {
         const sorted = sortByPriority(items);
@@ -444,6 +527,7 @@
     }
   }
 
+  // ===== Рендер списка задач =====
   function renderTasks() {
     tasksEl.innerHTML = '';
 
@@ -462,86 +546,144 @@
 
     const items = sortByPriority(deadlines.filter(x => x.date === selectedDate));
     if (items.length === 0) {
-      if (openTaskItem) closePanel();
+      if (openTaskId) closePanel();
       return;
     }
 
-    if (openTaskItem) {
-      openPanel(items[0]);
+    // Если открытая задача ещё существует — обновим панель
+    if (openTaskId) {
+      const stillOpen = items.find(x => x.id === openTaskId);
+      if (stillOpen) openPanel(stillOpen.id);
+      else closePanel();
     }
 
     items.forEach((item) => {
       const el = document.createElement('div');
       el.className = 'task p' + (item.priority || 3);
-      el.innerHTML = `
-        <div class="info">
-          <div class="name">${escapeHtml(item.subject)}</div>
-        </div>
-        <button class="del" data-idx="${deadlines.indexOf(item)}">×</button>
-      `;
-      el.addEventListener('click', (e) => {
-        if (e.target.classList.contains('del')) return;
-        if (openTaskItem === item) closePanel();
-        else openPanel(item);
-      });
-      tasksEl.appendChild(el);
-    });
 
-    tasksEl.querySelectorAll('.del').forEach(btn => {
-      btn.addEventListener('click', e => {
+      const info = document.createElement('div');
+      info.className = 'info';
+      const nameEl = document.createElement('div');
+      nameEl.className = 'name';
+      nameEl.textContent = item.subject;   // textContent, а не innerHTML
+      info.appendChild(nameEl);
+
+      const delBtn = document.createElement('button');
+      delBtn.className = 'del';
+      delBtn.type = 'button';
+      delBtn.textContent = '×';
+      delBtn.setAttribute('aria-label', 'Удалить');
+      delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        const idx = +e.target.dataset.idx;
-        deadlines.splice(idx, 1);
+        if (!confirm('Удалить этот дедлайн?')) return;
+        removeById(item.id);
         save();
+        if (openTaskId === item.id) closePanel();
         renderCalendar();
         renderTasks();
-        closePanel();
       });
+
+      el.appendChild(info);
+      el.appendChild(delBtn);
+
+      el.addEventListener('click', () => {
+        if (openTaskId === item.id) closePanel();
+        else openPanel(item.id);
+      });
+
+      tasksEl.appendChild(el);
     });
   }
 
-  function openPanel(item) {
-    openTaskItem = item;
+  // ===== Панель деталей =====
+  function openPanel(id) {
+    const item = findById(id);
+    if (!item) { closePanel(); return; }
+
+    openTaskId = id;
     const d = new Date(item.date);
     const links = item.links || [];
 
-    let linksHtml = '';
+    panelContent.textContent = '';
+
+    const h2 = document.createElement('h2');
+    h2.textContent = `${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}`;
+
+    const nameEl = document.createElement('div');
+    nameEl.className = 'detail-name';
+    nameEl.textContent = item.name;
+
+    panelContent.appendChild(h2);
+    panelContent.appendChild(nameEl);
+
     if (links.length > 0) {
-      linksHtml = `
-        <div class="links-list">
-          ${links.map((l, i) => `<a class="link-item" href="${escapeAttr(l.url)}" target="_blank"><span class="link-num">[${i+1}]</span>${escapeHtml(l.name)}</a>`).join('')}
-        </div>
-      `;
+      const list = document.createElement('div');
+      list.className = 'links-list';
+      links.forEach((l, i) => {
+        const href = safeUrl(l.url);
+        const a = document.createElement('a');
+        a.className = 'link-item';
+        a.target = '_blank';
+        a.rel = 'noopener noreferrer';   // защита от tabnabbing
+
+        const num = document.createElement('span');
+        num.className = 'link-num';
+        num.textContent = `[${i+1}]`;
+
+        if (href) {
+          a.href = href;
+          a.appendChild(num);
+          a.appendChild(document.createTextNode(l.name));
+        } else {
+          // невалидная/опасная ссылка — делаем просто текстом, без href
+          a.classList.add('link-item-invalid');
+          a.appendChild(num);
+          a.appendChild(document.createTextNode(l.name + ' (ссылка недоступна)'));
+          a.style.color = '#6c6c78';
+          a.style.cursor = 'default';
+        }
+        list.appendChild(a);
+      });
+      panelContent.appendChild(list);
     }
 
-    panelContent.innerHTML = `
-      <h2>${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}</h2>
-      <div class="detail-name">${escapeHtml(item.name)}</div>
-      ${linksHtml}
-      <div class="hint">Нажми, чтобы редактировать</div>
-    `;
+    const actions = document.createElement('div');
+    actions.className = 'panel-actions';
+
+    const editBtn = document.createElement('button');
+    editBtn.className = 'edit';
+    editBtn.type = 'button';
+    editBtn.textContent = 'Редактировать';
+    editBtn.addEventListener('click', () => openModal(item.id));
+
+    const delBtn = document.createElement('button');
+    delBtn.className = 'delete';
+    delBtn.type = 'button';
+    delBtn.textContent = 'Удалить';
+    delBtn.addEventListener('click', () => {
+      if (!confirm('Удалить этот дедлайн?')) return;
+      removeById(item.id);
+      save();
+      closePanel();
+      renderCalendar();
+      renderTasks();
+    });
+
+    actions.appendChild(editBtn);
+    actions.appendChild(delBtn);
+    panelContent.appendChild(actions);
+
     panel.classList.add('open');
     appEl.classList.add('shifted');
-
-    panelContent.onclick = (e) => {
-      if (e.target.closest('.link-item')) return;
-      openModal(item);
-    };
   }
 
   function closePanel() {
-    openTaskItem = null;
+    openTaskId = null;
     panel.classList.remove('open');
     appEl.classList.remove('shifted');
   }
 
-  function escapeHtml(s) {
-    return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  }
-  function escapeAttr(s) {
-    return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-  }
-
+  // ===== Модальное окно =====
   function autoGrow(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 300) + 'px';
@@ -561,9 +703,11 @@
     });
   }
 
-  function openModal(item) {
-    if (item) {
-      editingItem = item;
+  function openModal(id) {
+    if (id) {
+      const item = findById(id);
+      if (!item) return;
+      editingId = id;
       modalTitle.textContent = 'Редактировать дедлайн';
       inSubject.value = item.subject || '';
       inName.value = item.name || '';
@@ -577,12 +721,17 @@
         autoGrow(inLinks);
       }, 0);
     } else {
-      editingItem = null;
+      editingId = null;
       modalTitle.textContent = 'Новый дедлайн';
       resetModal();
     }
     modalBg.classList.add('open');
     inSubject.focus();
+  }
+
+  function closeModal() {
+    modalBg.classList.remove('open');
+    editingId = null;
   }
 
   prioRow.addEventListener('click', e => {
@@ -593,6 +742,7 @@
     selectedPriority = +btn.dataset.p;
   });
 
+  // ===== Навигация по месяцам =====
   document.getElementById('prev').addEventListener('click', () => {
     currentMonth--;
     if (currentMonth < 0) { currentMonth = 11; currentYear--; }
@@ -604,28 +754,44 @@
     renderCalendar();
   });
 
+  // ===== Кнопки =====
   addBtn.addEventListener('click', () => {
     if (!selectedDate) { alert('Сначала выбери день в календаре'); return; }
     if (addBtn.disabled) return;
     openModal(null);
   });
-  document.getElementById('cancel').addEventListener('click', () => {
-    modalBg.classList.remove('open');
-    editingItem = null;
+
+  document.getElementById('cancel').addEventListener('click', closeModal);
+
+  // Клик по фону модалки закрывает её
+  modalBg.addEventListener('mousedown', (e) => {
+    if (e.target === modalBg) closeModal();
   });
+
+  // Esc закрывает модалку и панель
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    if (modalBg.classList.contains('open')) closeModal();
+    else if (openTaskId) closePanel();
+  });
+
   document.getElementById('save').addEventListener('click', () => {
     const subject = inSubject.value.trim();
     const name = inName.value.trim();
     if (!subject || !name) { alert('Заполни предмет и задание'); return; }
     const links = parseLinks(inLinks.value);
 
-    if (editingItem) {
-      editingItem.subject = subject;
-      editingItem.name = name;
-      editingItem.links = links;
-      editingItem.priority = selectedPriority;
+    if (editingId) {
+      const item = findById(editingId);
+      if (item) {
+        item.subject = subject;
+        item.name = name;
+        item.links = links;
+        item.priority = selectedPriority;
+      }
     } else {
       deadlines.push({
+        id: uid(),
         date: selectedDate,
         subject, name, links,
         priority: selectedPriority
@@ -633,15 +799,15 @@
     }
 
     save();
-    modalBg.classList.remove('open');
-    editingItem = null;
+    closeModal();
     renderCalendar();
     renderTasks();
-    if (openTaskItem) openPanel(openTaskItem);
+    if (openTaskId) openPanel(openTaskId);
   });
 
   document.getElementById('close-panel').addEventListener('click', closePanel);
 
+  // ===== Инициализация =====
   selectedDate = fmt(today.getFullYear(), today.getMonth(), today.getDate());
   renderCalendar();
   renderTasks();

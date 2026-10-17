@@ -1,3 +1,8 @@
+Конечно. Я заменил ссылку на твой воркер (`https://itmo-ai.blaumarkv.workers.dev`). 
+
+Просто скопируй весь этот код, вставь в свой файл (вместо старого) и сохрани. После этого открой в браузере и попробуй нажать «Проанализировать».
+
+```html
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -7,459 +12,140 @@
 <title>Дедлайны ИТМО</title>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
-  body {
-    font-family: -apple-system, 'Segoe UI', Roboto, sans-serif;
-    background: #0f0f14; color: #eaeaea;
-    min-height: 100vh; overflow-x: hidden;
-    display: flex; justify-content: center;
-    zoom: 1.1;
-  }
-
+  body { font-family: -apple-system, 'Segoe UI', Roboto, sans-serif; background: #0f0f14; color: #eaeaea; min-height: 100vh; overflow-x: hidden; display: flex; justify-content: center; zoom: 1.1; }
   * { scrollbar-width: none; -ms-overflow-style: none; }
   *::-webkit-scrollbar { display: none; }
-
-  #app {
-    display: flex; width: 100%; max-width: 1100px;
-    transition: transform 0.35s ease;
-    position: relative;
-  }
+  #app { display: flex; width: 100%; max-width: 1100px; transition: transform 0.35s ease; position: relative; }
   #app.shifted { transform: translateX(-80px); }
-
-  #calendar-col {
-    flex: 1; padding: 16px;
-    max-width: 500px; margin: 0 auto;
-  }
-
-  header {
-    display: flex; justify-content: space-between; align-items: flex-start;
-    padding: 12px 0; margin-bottom: 12px;
-  }
+  #calendar-col { flex: 1; padding: 16px; max-width: 500px; margin: 0 auto; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px 0; margin-bottom: 12px; }
   header h1 { font-size: 20px; font-weight: 600; }
   header .sig { font-size: 11px; color: #6c6c78; margin-top: 2px; }
-  header .logo {
-    width: 32px; height: 32px; border-radius: 50%;
-    background: linear-gradient(135deg, #4a90e2, #8b5cf6);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 14px; font-weight: 700;
-  }
-
-  .month-nav {
-    display: flex; justify-content: space-between; align-items: center;
-    margin-bottom: 12px; padding: 0 4px;
-  }
-  .month-nav button {
-    background: #1c1c24; border: 1px solid #2a2a34;
-    color: #eaeaea; width: 36px; height: 36px;
-    border-radius: 10px; font-size: 16px; cursor: pointer;
-  }
+  header .logo { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #4a90e2, #8b5cf6); display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+  .month-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; padding: 0 4px; }
+  .month-nav button { background: #1c1c24; border: 1px solid #2a2a34; color: #eaeaea; width: 36px; height: 36px; border-radius: 10px; font-size: 16px; cursor: pointer; }
   .month-nav button:hover { background: #252530; }
   .month-nav .title { font-size: 16px; font-weight: 600; }
-
-  .weekdays {
-    display: grid; grid-template-columns: repeat(7, 1fr);
-    gap: 4px; margin-bottom: 8px;
-  }
-  .weekdays div {
-    text-align: center; font-size: 11px; color: #6c6c78;
-    padding: 4px 0; text-transform: uppercase;
-  }
-
-  .days {
-    display: grid; grid-template-columns: repeat(7, 1fr);
-    gap: 4px; margin-bottom: 20px;
-  }
-  .day {
-    aspect-ratio: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    border-radius: 10px; cursor: pointer;
-    font-size: 14px; position: relative;
-    background: #16161d;
-    transition: background 0.15s, opacity 0.15s, border-color 0.15s;
-    border: 1.5px solid transparent;
-  }
+  .weekdays { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 8px; }
+  .weekdays div { text-align: center; font-size: 11px; color: #6c6c78; padding: 4px 0; text-transform: uppercase; }
+  .days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; margin-bottom: 20px; }
+  .day { aspect-ratio: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 10px; cursor: pointer; font-size: 14px; position: relative; background: #16161d; transition: background 0.15s, opacity 0.15s, border-color 0.15s; border: 1.5px solid transparent; }
   .day:hover { background: #1f1f28; }
   .day.empty { background: transparent; cursor: default; border: none; }
   .day.past { opacity: 0.35; }
   .day.today { border-color: #5a5a66; }
   .day.selected { border-color: #4a90e2; }
   .day.has-tasks { background: #1a1a24; }
-
-  .day .dots {
-    position: absolute; bottom: 3px;
-    left: 50%; transform: translateX(-50%);
-    display: flex; flex-direction: row;
-    gap: 2px;
-  }
-  .day .dots .dot {
-    width: 5px; height: 5px; border-radius: 50%;
-    flex-shrink: 0;
-  }
-  .dot.p1 { background: #e74c3c; }
-  .dot.p2 { background: #f1c40f; }
-  .dot.p3 { background: #4a90e2; }
-
+  .day .dots { position: absolute; bottom: 3px; left: 50%; transform: translateX(-50%); display: flex; flex-direction: row; gap: 2px; }
+  .day .dots .dot { width: 5px; height: 5px; border-radius: 50%; flex-shrink: 0; }
+  .dot.p1 { background: #e74c3c; } .dot.p2 { background: #f1c40f; } .dot.p3 { background: #4a90e2; }
   .day .num { z-index: 1; }
-
-  .tasks-title {
-    font-size: 14px; color: #8a8a96; margin-bottom: 8px;
-    display: flex; justify-content: space-between; align-items: center;
-  }
-  .tasks-title button {
-    background: #4a90e2; border: none; color: #fff;
-    padding: 6px 12px; border-radius: 8px; font-size: 13px;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
+  .tasks-title { font-size: 14px; color: #8a8a96; margin-bottom: 8px; display: flex; justify-content: space-between; align-items: center; }
+  .tasks-title button { background: #4a90e2; border: none; color: #fff; padding: 6px 12px; border-radius: 8px; font-size: 13px; cursor: pointer; transition: background 0.15s; }
   .tasks-title button:hover:not(:disabled) { background: #5a9ff2; }
-  .tasks-title button:disabled {
-    background: #2a2a34; color: #6c6c78; cursor: not-allowed;
-  }
-
+  .tasks-title button:disabled { background: #2a2a34; color: #6c6c78; cursor: not-allowed; }
   .tasks { display: flex; flex-direction: column; gap: 8px; }
-  .task {
-    background: #1c1c24; border-radius: 12px; padding: 14px;
-    border-left: 3px solid #4a90e2;
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer;
-    transition: background 0.15s;
-  }
-  .task.p1 { border-left-color: #e74c3c; }
-  .task.p2 { border-left-color: #f1c40f; }
-  .task.p3 { border-left-color: #4a90e2; }
+  .task { background: #1c1c24; border-radius: 12px; padding: 14px; border-left: 3px solid #4a90e2; display: flex; justify-content: space-between; align-items: center; cursor: pointer; transition: background 0.15s; }
+  .task.p1 { border-left-color: #e74c3c; } .task.p2 { border-left-color: #f1c40f; } .task.p3 { border-left-color: #4a90e2; }
   .task:hover { background: #22222c; }
   .task .info { flex: 1; min-width: 0; }
-  .task .name {
-    font-size: 14px; font-weight: 600;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
-  .task .pdf-badge {
-    display: inline-block;
-    font-size: 10px; color: #e74c3c;
-    border: 1px solid #e74c3c;
-    border-radius: 4px;
-    padding: 0 4px;
-    margin-left: 6px;
-    vertical-align: middle;
-  }
-  .task .del {
-    background: none; border: none; color: #6c6c78;
-    font-size: 20px; cursor: pointer; padding: 0 6px;
-    flex-shrink: 0;
-  }
+  .task .name { font-size: 14px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .task .pdf-badge { display: inline-block; font-size: 10px; color: #e74c3c; border: 1px solid #e74c3c; border-radius: 4px; padding: 0 4px; margin-left: 6px; vertical-align: middle; }
+  .task .del { background: none; border: none; color: #6c6c78; font-size: 20px; cursor: pointer; padding: 0 6px; flex-shrink: 0; }
   .task .del:hover { color: #e74c3c; }
-
-  .footer {
-    text-align: center; font-size: 11px;
-    color: #4a4a55; padding: 24px 0 8px;
-  }
-
-  /* ===== ПАНЕЛЬ ===== */
-  #detail-panel {
-    position: fixed; top: 0; right: 0;
-    width: 340px; height: 100vh;
-    background: #16161d;
-    border-left: 1px solid #2a2a34;
-    padding: 20px;
-    transform: translateX(100%);
-    transition: transform 0.35s ease;
-    overflow-y: auto;
-    z-index: 50;
-  }
+  .footer { text-align: center; font-size: 11px; color: #4a4a55; padding: 24px 0 8px; }
+  #detail-panel { position: fixed; top: 0; right: 0; width: 340px; height: 100vh; background: #16161d; border-left: 1px solid #2a2a34; padding: 20px; transform: translateX(100%); transition: transform 0.35s ease; overflow-y: auto; z-index: 50; }
   #detail-panel.open { transform: translateX(0); }
-
-  #detail-panel .close {
-    background: none; border: none; color: #6c6c78;
-    font-size: 24px; cursor: pointer; float: right;
-    padding: 0 6px;
-    margin: -6px -6px 0 0;
-  }
+  #detail-panel .close { background: none; border: none; color: #6c6c78; font-size: 24px; cursor: pointer; float: right; padding: 0 6px; margin: -6px -6px 0 0; }
   #detail-panel .close:hover { color: #eaeaea; }
-
-  #detail-panel h2 {
-    font-size: 18px; font-weight: 600; margin-bottom: 12px;
-    padding-right: 30px;
-  }
-
-  .detail-name {
-    font-size: 16px; font-weight: 600; margin-bottom: 16px;
-    white-space: pre-wrap;
-    word-break: break-word;
-  }
-
-  .links-list {
-    display: flex; flex-direction: column; gap: 6px;
-    margin-bottom: 8px;
-  }
-  .link-item {
-    color: #4a90e2; text-decoration: none;
-    font-size: 14px; padding: 6px 0;
-    word-break: break-all;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
+  #detail-panel h2 { font-size: 18px; font-weight: 600; margin-bottom: 12px; padding-right: 30px; }
+  .detail-name { font-size: 16px; font-weight: 600; margin-bottom: 16px; white-space: pre-wrap; word-break: break-word; }
+  .links-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 8px; }
+  .link-item { color: #4a90e2; text-decoration: none; font-size: 14px; padding: 6px 0; word-break: break-all; cursor: pointer; display: flex; align-items: center; gap: 6px; }
   .link-item:hover { text-decoration: underline; }
-  .link-num {
-    color: #6c6c78; margin-right: 6px;
-  }
-  .link-status {
-    font-size: 11px;
-    flex-shrink: 0;
-  }
-  .link-status.ok { color: #4ade80; }
-  .link-status.bad { color: #e74c3c; }
-  .link-status.checking { color: #f1c40f; }
-
-  /* PDF-блок — обе кнопки серые */
-  .pdf-block {
-    margin-top: 16px;
-    padding: 12px;
-    background: #1c1c24;
-    border-radius: 10px;
-    border: 1px solid #2a2a34;
-  }
-  .pdf-block .pdf-title {
-    font-size: 12px; color: #8a8a96; margin-bottom: 8px;
-    text-transform: uppercase; letter-spacing: 0.5px;
-  }
-  .pdf-block .pdf-name {
-    font-size: 14px; color: #eaeaea;
-    margin-bottom: 8px;
-    word-break: break-all;
-  }
-  .pdf-block .pdf-size {
-    font-size: 11px; color: #6c6c78;
-    margin-bottom: 10px;
-  }
-  .pdf-block .pdf-actions {
-    display: flex; gap: 6px;
-  }
-  .pdf-block .pdf-actions button {
-    flex: 1;
-    padding: 8px;
-    border-radius: 8px;
-    font-size: 13px;
-    cursor: pointer;
-    font-family: inherit;
-    border: 1px solid #2a2a34;
-    background: #2a2a34;
-    color: #c8c8d2;
-    transition: background 0.15s, color 0.15s, border-color 0.15s;
-  }
-  .pdf-block .pdf-actions button:hover {
-    background: #33333f;
-    border-color: #3a3a46;
-  }
-  .pdf-block .pdf-actions .remove {
-    color: #b85555;
-  }
-  .pdf-block .pdf-actions .remove:hover {
-    color: #e74c3c;
-    background: #35262a;
-    border-color: #4a2a2e;
-  }
-
-  .panel-actions {
-    display: flex; gap: 8px; margin-top: 20px;
-  }
-  .panel-actions button {
-    flex: 1; padding: 10px; border-radius: 10px;
-    font-size: 14px; cursor: pointer; font-family: inherit;
-    border: none; transition: background 0.15s;
-  }
-  .panel-actions .edit { background: #4a90e2; color: #fff; }
-  .panel-actions .edit:hover { background: #5a9ff2; }
-  .panel-actions .delete { background: #3a1515; color: #e74c3c; }
-  .panel-actions .delete:hover { background: #4a1a1a; }
-
-  .hint {
-    font-size: 11px;
-    color: #4a4a55;
-    margin-top: 24px;
-    padding-top: 16px;
-    border-top: 1px solid #22222c;
-    text-align: center;
-  }
-
-  .modal-bg {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.7);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px; z-index: 100;
-  }
+  .link-num { color: #6c6c78; margin-right: 6px; }
+  .link-status { font-size: 11px; flex-shrink: 0; }
+  .link-status.ok { color: #4ade80; } .link-status.bad { color: #e74c3c; } .link-status.checking { color: #f1c40f; }
+  .pdf-block { margin-top: 16px; padding: 12px; background: #1c1c24; border-radius: 10px; border: 1px solid #2a2a34; }
+  .pdf-block .pdf-title { font-size: 12px; color: #8a8a96; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .pdf-block .pdf-name { font-size: 14px; color: #eaeaea; margin-bottom: 8px; word-break: break-all; }
+  .pdf-block .pdf-size { font-size: 11px; color: #6c6c78; margin-bottom: 10px; }
+  .pdf-block .pdf-actions { display: flex; gap: 6px; }
+  .pdf-block .pdf-actions button { flex: 1; padding: 8px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; border: 1px solid #2a2a34; background: #2a2a34; color: #c8c8d2; transition: background 0.15s, color 0.15s, border-color 0.15s; }
+  .pdf-block .pdf-actions button:hover { background: #33333f; border-color: #3a3a46; }
+  .pdf-block .pdf-actions .remove { color: #b85555; }
+  .pdf-block .pdf-actions .remove:hover { color: #e74c3c; background: #35262a; border-color: #4a2a2e; }
+  .panel-actions { display: flex; gap: 8px; margin-top: 20px; }
+  .panel-actions button { flex: 1; padding: 10px; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; border: none; transition: background 0.15s; }
+  .panel-actions .edit { background: #4a90e2; color: #fff; } .panel-actions .edit:hover { background: #5a9ff2; }
+  .panel-actions .delete { background: #3a1515; color: #e74c3c; } .panel-actions .delete:hover { background: #4a1a1a; }
+  .hint { font-size: 11px; color: #4a4a55; margin-top: 24px; padding-top: 16px; border-top: 1px solid #22222c; text-align: center; }
+  .modal-bg { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 100; }
   .modal-bg.open { display: flex; }
-  .modal {
-    background: #1c1c24; border-radius: 16px;
-    padding: 20px; width: 100%; max-width: 420px;
-    max-height: 90vh; overflow-y: auto;
-  }
+  .modal { background: #1c1c24; border-radius: 16px; padding: 20px; width: 100%; max-width: 420px; max-height: 90vh; overflow-y: auto; }
   .modal h3 { margin-bottom: 14px; font-size: 16px; }
-  .modal label {
-    font-size: 12px; color: #8a8a96;
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 4px; margin-top: 8px;
-  }
-  .modal label .counter {
-    font-size: 11px; color: #4a4a55;
-    font-variant-numeric: tabular-nums;
-  }
+  .modal label { font-size: 12px; color: #8a8a96; display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 4px; margin-top: 8px; }
+  .modal label .counter { font-size: 11px; color: #4a4a55; font-variant-numeric: tabular-nums; }
   .modal label .counter.over { color: #e74c3c; }
-
-  .modal input, .modal textarea {
-    width: 100%; padding: 10px 12px;
-    background: #0f0f14; border: 1px solid #2a2a34;
-    color: #eaeaea; border-radius: 10px; font-size: 14px;
-    font-family: inherit;
-  }
-  .modal textarea {
-    min-height: 90px;
-    max-height: 300px;
-    overflow-y: auto;
-    line-height: 1.6;
-    resize: none;
-  }
+  .modal input, .modal textarea { width: 100%; padding: 10px 12px; background: #0f0f14; border: 1px solid #2a2a34; color: #eaeaea; border-radius: 10px; font-size: 14px; font-family: inherit; }
+  .modal textarea { min-height: 90px; max-height: 300px; overflow-y: auto; line-height: 1.6; resize: none; }
   .modal input:focus, .modal textarea:focus { outline: none; border-color: #4a90e2; }
   .modal input.invalid, .modal textarea.invalid { border-color: #e74c3c; }
-
-  .field-error {
-    font-size: 11px; color: #e74c3c;
-    margin-top: 4px;
-    min-height: 13px;
-  }
-
+  .field-error { font-size: 11px; color: #e74c3c; margin-top: 4px; min-height: 13px; }
   .prio-row { display: flex; gap: 6px; margin-top: 6px; }
-  .prio-btn {
-    flex: 1; padding: 8px 4px; border-radius: 10px;
-    background: #0f0f14; border: 1px solid #2a2a34;
-    color: #8a8a96; font-size: 13px; cursor: pointer;
-    font-family: inherit;
-    transition: all 0.15s;
-    display: flex; align-items: center; justify-content: center; gap: 6px;
-  }
+  .prio-btn { flex: 1; padding: 8px 4px; border-radius: 10px; background: #0f0f14; border: 1px solid #2a2a34; color: #8a8a96; font-size: 13px; cursor: pointer; font-family: inherit; transition: all 0.15s; display: flex; align-items: center; justify-content: center; gap: 6px; }
   .prio-btn:hover { background: #1a1a24; }
   .prio-btn.active { color: #eaeaea; }
-  .prio-btn.active[data-p="1"] { border-color: #e74c3c; background: #3a1515; }
-  .prio-btn.active[data-p="2"] { border-color: #f1c40f; background: #3a3115; }
-  .prio-btn.active[data-p="3"] { border-color: #4a90e2; background: #1a2a40; }
+  .prio-btn.active[data-p="1"] { border-color: #e74c3c; background: #3a1515; } .prio-btn.active[data-p="2"] { border-color: #f1c40f; background: #3a3115; } .prio-btn.active[data-p="3"] { border-color: #4a90e2; background: #1a2a40; }
   .prio-dot { width: 8px; height: 8px; border-radius: 50%; }
-  .prio-dot.p1 { background: #e74c3c; }
-  .prio-dot.p2 { background: #f1c40f; }
-  .prio-dot.p3 { background: #4a90e2; }
-
-  .pdf-input-wrap {
-    margin-top: 6px;
-    border: 1.5px dashed #2a2a34;
-    border-radius: 10px;
-    padding: 14px;
-    text-align: center;
-    cursor: pointer;
-    transition: border-color 0.15s, background 0.15s;
-  }
+  .prio-dot.p1 { background: #e74c3c; } .prio-dot.p2 { background: #f1c40f; } .prio-dot.p3 { background: #4a90e2; }
+  .pdf-input-wrap { margin-top: 6px; border: 1.5px dashed #2a2a34; border-radius: 10px; padding: 14px; text-align: center; cursor: pointer; transition: border-color 0.15s, background 0.15s; }
   .pdf-input-wrap:hover { border-color: #4a90e2; background: #1a1a24; }
   .pdf-input-wrap.has-file { border-style: solid; border-color: #4a90e2; background: #1a2a40; }
-  .pdf-input-wrap .pdf-hint {
-    font-size: 12px; color: #8a8a96;
-  }
+  .pdf-input-wrap .pdf-hint { font-size: 12px; color: #8a8a96; }
   .pdf-input-wrap .pdf-hint strong { color: #4a90e2; }
   .pdf-input-wrap input[type="file"] { display: none; }
-  .pdf-current {
-    display: flex; justify-content: space-between; align-items: center;
-    gap: 8px; margin-top: 8px;
-  }
+  .pdf-current { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-top: 8px; }
   .pdf-current .info { flex: 1; min-width: 0; }
-  .pdf-current .name {
-    font-size: 13px; color: #eaeaea;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-  }
+  .pdf-current .name { font-size: 13px; color: #eaeaea; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .pdf-current .size { font-size: 11px; color: #6c6c78; }
-  .pdf-current .remove-btn {
-    background: none; border: none; color: #e74c3c;
-    font-size: 18px; cursor: pointer; padding: 0 4px;
-  }
-
+  .pdf-current .remove-btn { background: none; border: none; color: #e74c3c; font-size: 18px; cursor: pointer; padding: 0 4px; }
   .modal .actions { display: flex; gap: 8px; margin-top: 16px; }
-  .modal .actions button {
-    flex: 1; padding: 10px; border-radius: 10px;
-    font-size: 14px; cursor: pointer; font-family: inherit;
-    border: none;
-  }
+  .modal .actions button { flex: 1; padding: 10px; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; border: none; }
   .modal .actions .cancel { background: #2a2a34; color: #eaeaea; }
   .modal .actions .save { background: #4a90e2; color: #fff; }
   .modal .actions .save:disabled { background: #2a2a34; color: #6c6c78; cursor: not-allowed; }
-
-  /* ===== ПРОВЕРКА ССЫЛОК ===== */
-  .check-overlay {
-    position: fixed; inset: 0;
-    background: rgba(0,0,0,0.75);
-    display: none; align-items: center; justify-content: center;
-    padding: 20px; z-index: 200;
-  }
+  .check-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.75); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 200; }
   .check-overlay.open { display: flex; }
-  .check-box {
-    background: #1c1c24; border-radius: 16px;
-    padding: 20px; width: 100%; max-width: 460px;
-    max-height: 80vh; overflow-y: auto;
-  }
+  .check-box { background: #1c1c24; border-radius: 16px; padding: 20px; width: 100%; max-width: 460px; max-height: 80vh; overflow-y: auto; }
   .check-box h3 { margin-bottom: 14px; font-size: 16px; }
-  .check-list {
-    display: flex; flex-direction: column; gap: 8px;
-    margin-bottom: 16px;
-  }
-  .check-row {
-    display: flex; align-items: center; gap: 10px;
-    padding: 10px;
-    background: #16161d;
-    border-radius: 10px;
-    border: 1px solid #2a2a34;
-    font-size: 13px;
-  }
-  .check-row .icon {
-    width: 18px; text-align: center;
-    flex-shrink: 0;
-  }
-  .check-row .url {
-    flex: 1; min-width: 0;
-    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    color: #c8c8d2;
-  }
-  .check-row.ok .icon { color: #4ade80; }
-  .check-row.bad .icon { color: #e74c3c; }
-  .check-row.bad { border-color: #4a2a2e; background: #241a1c; }
+  .check-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+  .check-row { display: flex; align-items: center; gap: 10px; padding: 10px; background: #16161d; border-radius: 10px; border: 1px solid #2a2a34; font-size: 13px; }
+  .check-row .icon { width: 18px; text-align: center; flex-shrink: 0; }
+  .check-row .url { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: #c8c8d2; }
+  .check-row.ok .icon { color: #4ade80; } .check-row.bad .icon { color: #e74c3c; } .check-row.bad { border-color: #4a2a2e; background: #241a1c; }
   .check-row.checking .icon { color: #f1c40f; }
-  .check-row .spinner {
-    display: inline-block;
-    width: 12px; height: 12px;
-    border: 2px solid #3a3a46;
-    border-top-color: #f1c40f;
-    border-radius: 50%;
-    animation: spin 0.8s linear infinite;
-  }
+  .check-row .spinner { display: inline-block; width: 12px; height: 12px; border: 2px solid #3a3a46; border-top-color: #f1c40f; border-radius: 50%; animation: spin 0.8s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
-
-  .check-actions {
-    display: flex; gap: 8px;
-  }
-  .check-actions button {
-    flex: 1; padding: 10px; border-radius: 10px;
-    font-size: 14px; cursor: pointer; font-family: inherit;
-    border: none;
-  }
+  .check-actions { display: flex; gap: 8px; }
+  .check-actions button { flex: 1; padding: 10px; border-radius: 10px; font-size: 14px; cursor: pointer; font-family: inherit; border: none; }
   .check-actions .cancel { background: #2a2a34; color: #eaeaea; }
   .check-actions .proceed { background: #4a90e2; color: #fff; }
   .check-actions .proceed:disabled { background: #2a2a34; color: #6c6c78; cursor: not-allowed; }
 
-  @media (max-width: 1200px) {
-    body { zoom: 1; }
-    #app.shifted { transform: translateY(-55vh); }
-    #detail-panel {
-      top: auto; bottom: 0; right: 0; left: 0;
-      width: 100%; height: 50vh;
-      border-left: none; border-top: 1px solid #2a2a34;
-      border-radius: 20px 20px 0 0;
-      transform: translateY(100%);
-    }
-    #detail-panel.open { transform: translateY(0); }
-  }
+  .ai-block { margin-top: 16px; padding: 12px; background: #1a1a24; border-radius: 10px; border: 1px solid #2a2a34; }
+  .ai-block .ai-title { font-size: 12px; color: #8a8a96; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+  .ai-block .ai-btn { background: #8b5cf6; border: none; color: #fff; padding: 4px 10px; border-radius: 6px; font-size: 11px; cursor: pointer; font-family: inherit; }
+  .ai-block .ai-btn:hover { background: #7c4dff; }
+  .ai-block .ai-btn:disabled { background: #2a2a34; color: #6c6c78; cursor: not-allowed; }
+  .ai-block .ai-content { font-size: 13px; }
+  .ai-block .ai-row { display: flex; justify-content: space-between; margin-bottom: 6px; }
+  .ai-block .ai-label { color: #6c6c78; }
+  .ai-block .ai-value { color: #eaeaea; font-weight: 600; }
+  .ai-block .ai-topics { margin-top: 8px; }
+  .ai-block .ai-topics .tag { display: inline-block; background: #2a2a34; color: #c8c8d2; padding: 2px 8px; border-radius: 10px; font-size: 11px; margin: 2px 4px 2px 0; }
+  .ai-block .ai-why { font-size: 11px; color: #6c6c78; margin-top: 8px; font-style: italic; }
+  .ai-block .ai-placeholder { color: #4a4a55; font-size: 12px; text-align: center; padding: 8px 0; }
 </style>
 </head>
 <body>
@@ -467,32 +153,18 @@
 <div id="app">
   <div id="calendar-col">
     <header>
-      <div>
-        <h1>Дедлайны ИТМО</h1>
-        <div class="sig">by @blau_mark</div>
-      </div>
+      <div><h1>Дедлайны ИТМО</h1><div class="sig">by @blau_mark</div></div>
       <div class="logo">ИТ</div>
     </header>
-
     <div class="month-nav">
       <button id="prev">◀</button>
       <div class="title" id="month-title">—</div>
       <button id="next">▶</button>
     </div>
-
-    <div class="weekdays">
-      <div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div>
-    </div>
-
+    <div class="weekdays"><div>Пн</div><div>Вт</div><div>Ср</div><div>Чт</div><div>Пт</div><div>Сб</div><div>Вс</div></div>
     <div class="days" id="days"></div>
-
-    <div class="tasks-title">
-      <span id="selected-date">Выбери день</span>
-      <button id="add-btn">+ Добавить</button>
-    </div>
-
+    <div class="tasks-title"><span id="selected-date">Выбери день</span><button id="add-btn">+ Добавить</button></div>
     <div class="tasks" id="tasks"></div>
-
     <div class="footer">© 2026 · @blau_mark</div>
   </div>
 </div>
@@ -505,648 +177,321 @@
 <div class="modal-bg" id="modal-bg">
   <div class="modal" id="modal">
     <h3 id="modal-title">Новый дедлайн</h3>
-
-    <label>
-      <span>Предмет</span>
-      <span class="counter" id="cnt-subject">0/80</span>
-    </label>
+    <label><span>Предмет</span><span class="counter" id="cnt-subject">0/80</span></label>
     <input id="in-subject" maxlength="80" placeholder="Дискретная математика">
     <div class="field-error" id="err-subject"></div>
-
-    <label>
-      <span>Задание</span>
-      <span class="counter" id="cnt-name">0/2000</span>
-    </label>
+    <label><span>Задание</span><span class="counter" id="cnt-name">0/2000</span></label>
     <textarea id="in-name" maxlength="2000" placeholder="Лаба №3"></textarea>
     <div class="field-error" id="err-name"></div>
-
-    <label>
-      <span>Ссылки (по одной на строку)</span>
-      <span class="counter" id="cnt-links">0/3000</span>
-    </label>
+    <label><span>Ссылки (по одной на строку)</span><span class="counter" id="cnt-links">0/3000</span></label>
     <textarea id="in-links" maxlength="3000" placeholder="https://disk.yandex.ru/xxx"></textarea>
     <div class="field-error" id="err-links"></div>
-
     <label style="margin-top:12px;">Приоритет</label>
     <div class="prio-row" id="prio-row">
-      <button type="button" class="prio-btn active" data-p="3">
-        <span class="prio-dot p3"></span>Обычный
-      </button>
-      <button type="button" class="prio-btn" data-p="2">
-        <span class="prio-dot p2"></span>Важно
-      </button>
-      <button type="button" class="prio-btn" data-p="1">
-        <span class="prio-dot p1"></span>Горит
-      </button>
+      <button type="button" class="prio-btn active" data-p="3"><span class="prio-dot p3"></span>Обычный</button>
+      <button type="button" class="prio-btn" data-p="2"><span class="prio-dot p2"></span>Важно</button>
+      <button type="button" class="prio-btn" data-p="1"><span class="prio-dot p1"></span>Горит</button>
     </div>
-
     <label style="margin-top:12px;">PDF-файл (необязательно)</label>
     <div class="pdf-input-wrap" id="pdf-wrap">
-      <div class="pdf-hint" id="pdf-hint">
-        <strong>Нажми</strong> или перетащи PDF сюда<br>
-        <span style="font-size:10px;">макс. 3 МБ</span>
-      </div>
+      <div class="pdf-hint" id="pdf-hint"><strong>Нажми</strong> или перетащи PDF сюда<br><span style="font-size:10px;">макс. 3 МБ</span></div>
       <input type="file" id="in-pdf" accept="application/pdf,.pdf">
     </div>
     <div class="field-error" id="err-pdf"></div>
-
-    <div class="actions">
-      <button class="cancel" id="cancel">Отмена</button>
-      <button class="save" id="save">Сохранить</button>
-    </div>
+    <div class="actions"><button class="cancel" id="cancel">Отмена</button><button class="save" id="save">Сохранить</button></div>
   </div>
 </div>
 
-<!-- Оверлей проверки ссылок -->
 <div class="check-overlay" id="check-overlay">
   <div class="check-box">
     <h3>Проверка ссылок</h3>
     <div class="check-list" id="check-list"></div>
-    <div class="check-actions">
-      <button class="cancel" id="check-cancel">Отмена</button>
-      <button class="proceed" id="check-proceed" disabled>Сохранить всё равно</button>
-    </div>
+    <div class="check-actions"><button class="cancel" id="check-cancel">Отмена</button><button class="proceed" id="check-proceed" disabled>Сохранить всё равно</button></div>
   </div>
 </div>
 
 <script>
   'use strict';
 
-  // ===== Константы =====
+  // ===== Твой URL Cloudflare Worker =====
+  const AI_WORKER_URL = 'https://itmo-ai.blaumarkv.workers.dev';
+
   const STORAGE_KEY = 'itmo_deadlines_v3';
   const ALLOWED_PROTOCOLS = ['http:', 'https:'];
-  const LIMITS = {
-    subject: 80,
-    name: 2000,
-    linkName: 100,
-    linkUrl: 500,
-    linksRaw: 3000,
-    pdfBytes: 3 * 1024 * 1024
-  };
-  const LINK_CHECK_TIMEOUT = 5000;     // 5 сек на ссылку
-  const LINK_CHECK_CACHE_MS = 5 * 60 * 1000; // 5 минут кэш
+  const LIMITS = { subject: 80, name: 2000, linkName: 100, linkUrl: 500, linksRaw: 3000, pdfBytes: 3 * 1024 * 1024 };
+  const LINK_CHECK_TIMEOUT = 5000;
+  const LINK_CHECK_CACHE_MS = 5 * 60 * 1000;
 
-  // Опциональный прокси для настоящей проверки (см. пояснение в чате).
-  // Если раскомментируешь и поднимешь бэкенд — проверка станет точной.
-  // const LINK_CHECK_PROXY = 'https://your-worker.example.com/check?url=';
-
-  // ===== Хранилище =====
   let deadlines = loadDeadlines();
-
   function loadDeadlines() {
     try {
       const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       if (!Array.isArray(raw)) return [];
-      return raw
-        .filter(x => x && typeof x === 'object')
-        .map(x => ({
-          id: typeof x.id === 'string' ? x.id : uid(),
-          date: String(x.date || ''),
-          subject: clampStr(x.subject, LIMITS.subject),
-          name: clampStr(x.name, LIMITS.name),
-          links: Array.isArray(x.links) ? x.links.map(normalizeLink).filter(Boolean) : [],
-          priority: [1, 2, 3].includes(x.priority) ? x.priority : 3,
-          pdf: normalizePdf(x.pdf)
-        }))
-        .filter(x => x.date);
-    } catch {
-      return [];
-    }
+      return raw.filter(x => x && typeof x === 'object').map(x => ({
+        id: typeof x.id === 'string' ? x.id : uid(),
+        date: String(x.date || ''),
+        subject: clampStr(x.subject, LIMITS.subject),
+        name: clampStr(x.name, LIMITS.name),
+        links: Array.isArray(x.links) ? x.links.map(normalizeLink).filter(Boolean) : [],
+        priority: [1, 2, 3].includes(x.priority) ? x.priority : 3,
+        pdf: normalizePdf(x.pdf),
+        aiData: x.aiData || null
+      })).filter(x => x.date);
+    } catch { return []; }
   }
+  function normalizePdf(p) { if (!p || typeof p !== 'object' || typeof p.data !== 'string' || !p.data.startsWith('data:application/pdf')) return null; return { name: clampStr(p.name, 200) || 'file.pdf', size: Number(p.size) || 0, data: p.data }; }
+  function clampStr(s, max) { return String(s == null ? '' : s).slice(0, max); }
+  function uid() { return 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8); }
+  function normalizeLink(l) { if (!l || typeof l !== 'object') return null; let name = clampStr(l.name, LIMITS.linkName).trim(); let url = clampStr(l.url, LIMITS.linkUrl).trim(); if (!name && !url) return null; return { name: name || url, url: url || name }; }
+  function save() { try { localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines)); return true; } catch (e) { alert('Хранилище переполнено.'); return false; } }
+  function findById(id) { return deadlines.find(x => x.id === id) || null; }
+  function removeById(id) { const i = deadlines.findIndex(x => x.id === id); if (i === -1) return false; deadlines.splice(i, 1); return true; }
 
-  function normalizePdf(p) {
-    if (!p || typeof p !== 'object') return null;
-    if (typeof p.data !== 'string' || !p.data.startsWith('data:application/pdf')) return null;
-    return {
-      name: clampStr(p.name, 200) || 'file.pdf',
-      size: Number(p.size) || 0,
-      data: p.data
-    };
-  }
-
-  function clampStr(s, max) {
-    return String(s == null ? '' : s).slice(0, max);
-  }
-
-  function uid() {
-    return 'd_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
-  }
-
-  function normalizeLink(l) {
-    if (!l || typeof l !== 'object') return null;
-    let name = clampStr(l.name, LIMITS.linkName).trim();
-    let url = clampStr(l.url, LIMITS.linkUrl).trim();
-    if (!name && !url) return null;
-    return { name: name || url, url: url || name };
-  }
-
-  function save() {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(deadlines));
-      return true;
-    } catch (e) {
-      if (e && (e.name === 'QuotaExceededError' || e.code === 22)) {
-        alert('Хранилище браузера переполнено. Удали лишние PDF или дедлайны.');
-      } else {
-        alert('Не удалось сохранить: ' + e);
-      }
-      return false;
-    }
-  }
-
-  function findById(id) {
-    return deadlines.find(x => x.id === id) || null;
-  }
-
-  function removeById(id) {
-    const i = deadlines.findIndex(x => x.id === id);
-    if (i === -1) return false;
-    deadlines.splice(i, 1);
-    return true;
-  }
-
-  // ===== Утилиты =====
   const today = new Date(); today.setHours(0,0,0,0);
-  let currentMonth = today.getMonth();
-  let currentYear = today.getFullYear();
-  let selectedDate = null;
-  let openTaskId = null;
-  let selectedPriority = 3;
-  let editingId = null;
-  let pendingPdf = null;
-  let pdfRemoved = false;
-
-  // Кэш результатов проверки ссылок
-  const linkCheckCache = new Map(); // url -> { ok, ts }
-
-  const daysEl = document.getElementById('days');
-  const monthTitle = document.getElementById('month-title');
-  const tasksEl = document.getElementById('tasks');
-  const selectedDateEl = document.getElementById('selected-date');
-  const addBtn = document.getElementById('add-btn');
-  const modalBg = document.getElementById('modal-bg');
-  const modalTitle = document.getElementById('modal-title');
-  const inSubject = document.getElementById('in-subject');
-  const inName = document.getElementById('in-name');
-  const inLinks = document.getElementById('in-links');
-  const inPdf = document.getElementById('in-pdf');
-  const pdfWrap = document.getElementById('pdf-wrap');
-  const pdfHint = document.getElementById('pdf-hint');
-  const errSubject = document.getElementById('err-subject');
-  const errName = document.getElementById('err-name');
-  const errLinks = document.getElementById('err-links');
-  const errPdf = document.getElementById('err-pdf');
-  const cntSubject = document.getElementById('cnt-subject');
-  const cntName = document.getElementById('cnt-name');
-  const cntLinks = document.getElementById('cnt-links');
-  const appEl = document.getElementById('app');
-  const panel = document.getElementById('detail-panel');
-  const panelContent = document.getElementById('panel-content');
-  const prioRow = document.getElementById('prio-row');
-  const checkOverlay = document.getElementById('check-overlay');
-  const checkList = document.getElementById('check-list');
-  const checkProceed = document.getElementById('check-proceed');
-  const checkCancel = document.getElementById('check-cancel');
-
-  const MONTHS = ['Января','Февраля','Марта','Апреля','Мая','Июня','Июля','Августа','Сентября','Октября','Ноября','Декабря'];
-  const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
-
+  let currentMonth = today.getMonth(); let currentYear = today.getFullYear(); let selectedDate = null; let openTaskId = null; let selectedPriority = 3; let editingId = null; let pendingPdf = null; let pdfRemoved = false;
+  const linkCheckCache = new Map();
+  const daysEl = document.getElementById('days'); const monthTitle = document.getElementById('month-title'); const tasksEl = document.getElementById('tasks'); const selectedDateEl = document.getElementById('selected-date'); const addBtn = document.getElementById('add-btn'); const modalBg = document.getElementById('modal-bg'); const modalTitle = document.getElementById('modal-title'); const inSubject = document.getElementById('in-subject'); const inName = document.getElementById('in-name'); const inLinks = document.getElementById('in-links'); const inPdf = document.getElementById('in-pdf'); const pdfWrap = document.getElementById('pdf-wrap'); const pdfHint = document.getElementById('pdf-hint'); const errSubject = document.getElementById('err-subject'); const errName = document.getElementById('err-name'); const errLinks = document.getElementById('err-links'); const errPdf = document.getElementById('err-pdf'); const cntSubject = document.getElementById('cnt-subject'); const cntName = document.getElementById('cnt-name'); const cntLinks = document.getElementById('cnt-links'); const appEl = document.getElementById('app'); const panel = document.getElementById('detail-panel'); const panelContent = document.getElementById('panel-content'); const prioRow = document.getElementById('prio-row'); const checkOverlay = document.getElementById('check-overlay'); const checkList = document.getElementById('check-list'); const checkProceed = document.getElementById('check-proceed'); const checkCancel = document.getElementById('check-cancel');
+  const MONTHS = ['Января','Февраля','Марта','Апреля','Мая','Июня','Июля','Августа','Сентября','Октября','Ноября','Декабря']; const MONTHS_NOM = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
   function fmt(y, m, d) { return `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`; }
+  function safeUrl(raw) { if (!raw) return null; try { const u = new URL(raw); if (!ALLOWED_PROTOCOLS.includes(u.protocol)) return null; return u.href; } catch { return null; } }
+  function parseLinks(raw) { if (!raw) return { links: [], errors: [] }; const errors = []; const links = []; const lines = raw.split('\n').map(l => l.trim()).filter(Boolean); for (let i = 0; i < lines.length; i++) { const line = lines[i]; let name = '', url = ''; let m = line.match(/^\[([^\]]+)\]\(([^)]+)\)$/); if (m) { name = m[1].trim(); url = m[2].trim(); } else { m = line.match(/^(.+?)\s*\|\s*(.+)$/); if (m) { name = m[1].trim(); url = m[2].trim(); } else { name = line; url = line; } } if (name.length > LIMITS.linkName) { errors.push(`Строка ${i+1}: имя длиннее ${LIMITS.linkName}`); continue; } if (url.length > LIMITS.linkUrl) { errors.push(`Строка ${i+1}: URL длиннее ${LIMITS.linkUrl}`); continue; } const valid = safeUrl(url); if (!valid) { errors.push(`Строка ${i+1}: невалидная ссылка`); continue; } links.push({ name: name || valid, url: valid }); } return { links, errors }; }
+  function linksToString(links) { if (!links || links.length === 0) return ''; return links.map(l => l.name === l.url ? l.url : `[${l.name}](${l.url})`).join('\n'); }
+  function sortByPriority(items) { return [...items].sort((a, b) => (a.priority || 3) - (b.priority || 3)); }
+  function formatBytes(n) { if (!n) return '0 B'; if (n < 1024) return n + ' B'; if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB'; return (n / 1024 / 1024).toFixed(2) + ' MB'; }
 
-  // ===== URL =====
-  function safeUrl(raw) {
-    if (!raw) return null;
-    try {
-      const u = new URL(raw);
-      if (!ALLOWED_PROTOCOLS.includes(u.protocol)) return null;
-      return u.href;
-    } catch {
-      return null;
+  // ===== AI-ЛОГИКА =====
+  async function fetchAiAnalysis(subject, taskName) {
+    if (!AI_WORKER_URL || AI_WORKER_URL.includes('твой-воркер')) {
+      throw new Error('Укажи URL воркера в AI_WORKER_URL');
     }
+    const res = await fetch(AI_WORKER_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ subject, taskName })
+    });
+    if (!res.ok) throw new Error('Ошибка сервера');
+    const data = await res.json();
+    if (data.error) throw new Error(data.error);
+    return data;
   }
 
-  function parseLinks(raw) {
-    if (!raw) return { links: [], errors: [] };
-    const errors = [];
-    const links = [];
-    const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+  function renderAiBlock(container, item) {
+    const block = document.createElement('div');
+    block.className = 'ai-block';
+    
+    const title = document.createElement('div');
+    title.className = 'ai-title';
+    title.textContent = 'AI-анализ';
+    
+    const btn = document.createElement('button');
+    btn.className = 'ai-btn';
+    btn.type = 'button';
+    btn.textContent = 'Проанализировать';
+    
+    title.appendChild(btn);
+    block.appendChild(title);
 
-    for (let i = 0; i < lines.length; i++) {
-      const line = lines[i];
-      let name = '', url = '';
-
-      let m = line.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
-      if (m) {
-        name = m[1].trim();
-        url = m[2].trim();
-      } else {
-        m = line.match(/^(.+?)\s*\|\s*(.+)$/);
-        if (m) {
-          name = m[1].trim();
-          url = m[2].trim();
-        } else {
-          name = line;
-          url = line;
-        }
-      }
-
-      if (name.length > LIMITS.linkName) {
-        errors.push(`Строка ${i+1}: имя ссылки длиннее ${LIMITS.linkName} символов`);
-        continue;
-      }
-      if (url.length > LIMITS.linkUrl) {
-        errors.push(`Строка ${i+1}: URL длиннее ${LIMITS.linkUrl} символов`);
-        continue;
-      }
-
-      const valid = safeUrl(url);
-      if (!valid) {
-        errors.push(`Строка ${i+1}: невалидная ссылка (нужен http:// или https://)`);
-        continue;
-      }
-
-      links.push({ name: name || valid, url: valid });
+    const content = document.createElement('div');
+    content.className = 'ai-content';
+    
+    if (item.aiData) {
+      renderAiContent(content, item.aiData);
+      btn.style.display = 'none';
+    } else {
+      content.innerHTML = '<div class="ai-placeholder">Нет данных. Нажми «Проанализировать».</div>';
     }
-    return { links, errors };
+    block.appendChild(content);
+
+    btn.addEventListener('click', async () => {
+      btn.disabled = true;
+      btn.textContent = 'Анализ...';
+      content.innerHTML = '<div class="ai-placeholder">⏳ Думаю...</div>';
+      try {
+        const result = await fetchAiAnalysis(item.subject, item.name);
+        item.aiData = result;
+        save();
+        renderAiContent(content, result);
+        btn.style.display = 'none';
+      } catch (e) {
+        content.innerHTML = `<div class="ai-placeholder" style="color:#e74c3c;">Ошибка: ${e.message}</div>`;
+        btn.disabled = false;
+        btn.textContent = 'Повторить';
+      }
+    });
+
+    return block;
   }
 
-  function linksToString(links) {
-    if (!links || links.length === 0) return '';
-    return links.map(l => l.name === l.url ? l.url : `[${l.name}](${l.url})`).join('\n');
-  }
-
-  function sortByPriority(items) {
-    return [...items].sort((a, b) => (a.priority || 3) - (b.priority || 3));
-  }
-
-  function formatBytes(n) {
-    if (!n) return '0 B';
-    if (n < 1024) return n + ' B';
-    if (n < 1024 * 1024) return (n / 1024).toFixed(1) + ' KB';
-    return (n / 1024 / 1024).toFixed(2) + ' MB';
+  function renderAiContent(container, data) {
+    container.innerHTML = `
+      <div class="ai-row"><span class="ai-label">Сложность</span><span class="ai-value">${data.difficulty}/10</span></div>
+      <div class="ai-row"><span class="ai-label">Время</span><span class="ai-value">~${data.hours} ч</span></div>
+      <div class="ai-topics">
+        ${(data.topics || []).map(t => `<span class="tag">${t}</span>`).join('')}
+      </div>
+      <div class="ai-why">${data.why || ''}</div>
+    `;
   }
 
   // ===== ПРОВЕРКА ССЫЛОК =====
-  /**
-   * Проверяет доступность URL.
-   * Возвращает { ok: boolean, reason: string }.
-   *
-   * ВАЖНО: из браузера без бэкенда нельзя узнать HTTP-статус чужого сайта
-   * из-за CORS. Поэтому используем fetch в режиме 'no-cors' с таймаутом.
-   * Если запрос не упал по сети — считаем ссылку "доступной".
-   * Если упал (TypeError, timeout) — считаем "недоступной".
-   *
-   * Если хочешь точную проверку — раскомментируй LINK_CHECK_PROXY выше
-   * и подними Cloudflare Worker / Node-сервер, который делает HEAD-запрос.
-   */
   async function checkLink(url) {
-    // кэш
     const cached = linkCheckCache.get(url);
     if (cached && Date.now() - cached.ts < LINK_CHECK_CACHE_MS) {
       return { ok: cached.ok, reason: cached.reason, cached: true };
     }
-
-    // Если есть прокси — используем его
-    // if (typeof LINK_CHECK_PROXY === 'string') {
-    //   try {
-    //     const r = await fetch(LINK_CHECK_PROXY + encodeURIComponent(url),
-    //       { signal: AbortSignal.timeout(LINK_CHECK_TIMEOUT) });
-    //     const j = await r.json();
-    //     const result = { ok: !!j.ok, reason: j.reason || (j.status ? 'HTTP ' + j.status : '') };
-    //     linkCheckCache.set(url, { ...result, ts: Date.now() });
-    //     return result;
-    //   } catch (e) {
-    //     const result = { ok: false, reason: 'proxy error' };
-    //     linkCheckCache.set(url, { ...result, ts: Date.now() });
-    //     return result;
-    //   }
-    // }
-
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), LINK_CHECK_TIMEOUT);
-      await fetch(url, {
-        method: 'GET',
-        mode: 'no-cors',
-        redirect: 'follow',
-        cache: 'no-store',
-        signal: ctrl.signal
-      });
+      await fetch(url, { method: 'GET', mode: 'no-cors', redirect: 'follow', cache: 'no-store', signal: ctrl.signal });
       clearTimeout(t);
       const result = { ok: true, reason: 'доступна' };
       linkCheckCache.set(url, { ...result, ts: Date.now() });
       return result;
     } catch (e) {
-      const result = {
-        ok: false,
-        reason: e.name === 'AbortError' ? 'таймаут' : 'не отвечает'
-      };
+      const result = { ok: false, reason: e.name === 'AbortError' ? 'таймаут' : 'не отвечает' };
       linkCheckCache.set(url, { ...result, ts: Date.now() });
       return result;
     }
   }
 
-  /**
-   * Проверяет массив ссылок параллельно, обновляя UI через колбэк.
-   * Возвращает Promise<{ allOk, results }>.
-   */
   async function checkLinksWithUI(links, onUpdate) {
     const results = new Array(links.length).fill(null);
-
     const tasks = links.map(async (link, i) => {
       const r = await checkLink(link.url);
       results[i] = r;
       onUpdate(i, r);
     });
-
     await Promise.all(tasks);
     const allOk = results.every(r => r && r.ok);
     return { allOk, results };
   }
 
-  // ===== Рендер календаря =====
+  // ===== РЕНДЕР КАЛЕНДАРЯ =====
   function renderCalendar() {
     daysEl.innerHTML = '';
     monthTitle.textContent = `${MONTHS_NOM[currentMonth]} ${currentYear}`;
-
     const first = new Date(currentYear, currentMonth, 1);
     const startDay = (first.getDay() + 6) % 7;
     const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
-
     for (let i = 0; i < startDay; i++) {
-      const cell = document.createElement('div');
-      cell.className = 'day empty';
-      daysEl.appendChild(cell);
+      const cell = document.createElement('div'); cell.className = 'day empty'; daysEl.appendChild(cell);
     }
-
     for (let d = 1; d <= daysInMonth; d++) {
       const cell = document.createElement('div');
       const dateStr = fmt(currentYear, currentMonth, d);
       const cellDate = new Date(dateStr); cellDate.setHours(0,0,0,0);
-
       cell.className = 'day';
       if (cellDate < today) cell.classList.add('past');
       if (dateStr === fmt(today.getFullYear(), today.getMonth(), today.getDate())) cell.classList.add('today');
       if (dateStr === selectedDate) cell.classList.add('selected');
-
       const items = deadlines.filter(x => x.date === dateStr);
       if (items.length > 0) cell.classList.add('has-tasks');
-
-      const num = document.createElement('span');
-      num.className = 'num';
-      num.textContent = d;
-      cell.appendChild(num);
-
+      const num = document.createElement('span'); num.className = 'num'; num.textContent = d; cell.appendChild(num);
       if (items.length > 0) {
         const sorted = sortByPriority(items);
         const dotsCount = Math.min(sorted.length, 5);
-        const dots = document.createElement('div');
-        dots.className = 'dots';
+        const dots = document.createElement('div'); dots.className = 'dots';
         for (let i = 0; i < dotsCount; i++) {
-          const dot = document.createElement('span');
-          dot.className = 'dot p' + (sorted[i].priority || 3);
-          dots.appendChild(dot);
+          const dot = document.createElement('span'); dot.className = 'dot p' + (sorted[i].priority || 3); dots.appendChild(dot);
         }
         cell.appendChild(dots);
       }
-
-      cell.addEventListener('click', () => {
-        selectedDate = dateStr;
-        renderCalendar();
-        renderTasks();
-      });
-
+      cell.addEventListener('click', () => { selectedDate = dateStr; renderCalendar(); renderTasks(); });
       daysEl.appendChild(cell);
     }
   }
 
-  // ===== Рендер задач =====
+  // ===== РЕНДЕР ЗАДАЧ =====
   function renderTasks() {
     tasksEl.innerHTML = '';
-
-    if (!selectedDate) {
-      selectedDateEl.textContent = 'Выбери день';
-      addBtn.disabled = true;
-      return;
-    }
-
+    if (!selectedDate) { selectedDateEl.textContent = 'Выбери день'; addBtn.disabled = true; return; }
     const d = new Date(selectedDate);
     const isPast = d < today;
     addBtn.disabled = isPast;
     addBtn.title = isPast ? 'Нельзя добавить в прошедший день' : '';
-
     selectedDateEl.textContent = `${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}`;
-
     const items = sortByPriority(deadlines.filter(x => x.date === selectedDate));
-    if (items.length === 0) {
-      if (openTaskId) closePanel();
-      return;
-    }
-
+    if (items.length === 0) { if (openTaskId) closePanel(); return; }
     if (openTaskId) {
       const stillOpen = items.find(x => x.id === openTaskId);
-      if (stillOpen) openPanel(stillOpen.id);
-      else closePanel();
+      if (stillOpen) openPanel(stillOpen.id); else closePanel();
     }
-
     items.forEach((item) => {
-      const el = document.createElement('div');
-      el.className = 'task p' + (item.priority || 3);
-
-      const info = document.createElement('div');
-      info.className = 'info';
-      const nameEl = document.createElement('div');
-      nameEl.className = 'name';
-      nameEl.textContent = item.subject;
-
+      const el = document.createElement('div'); el.className = 'task p' + (item.priority || 3);
+      const info = document.createElement('div'); info.className = 'info';
+      const nameEl = document.createElement('div'); nameEl.className = 'name'; nameEl.textContent = item.subject;
       if (item.pdf) {
-        const badge = document.createElement('span');
-        badge.className = 'pdf-badge';
-        badge.textContent = 'PDF';
-        nameEl.appendChild(badge);
+        const badge = document.createElement('span'); badge.className = 'pdf-badge'; badge.textContent = 'PDF'; nameEl.appendChild(badge);
       }
-
       info.appendChild(nameEl);
-
-      const delBtn = document.createElement('button');
-      delBtn.className = 'del';
-      delBtn.type = 'button';
-      delBtn.textContent = '×';
-      delBtn.setAttribute('aria-label', 'Удалить');
+      const delBtn = document.createElement('button'); delBtn.className = 'del'; delBtn.type = 'button'; delBtn.textContent = '×'; delBtn.setAttribute('aria-label', 'Удалить');
       delBtn.addEventListener('click', (e) => {
         e.stopPropagation();
         if (!confirm('Удалить этот дедлайн?')) return;
-        removeById(item.id);
-        save();
-        if (openTaskId === item.id) closePanel();
-        renderCalendar();
-        renderTasks();
+        removeById(item.id); save(); if (openTaskId === item.id) closePanel(); renderCalendar(); renderTasks();
       });
-
-      el.appendChild(info);
-      el.appendChild(delBtn);
-
-      el.addEventListener('click', () => {
-        if (openTaskId === item.id) closePanel();
-        else openPanel(item.id);
-      });
-
+      el.appendChild(info); el.appendChild(delBtn);
+      el.addEventListener('click', () => { if (openTaskId === item.id) closePanel(); else openPanel(item.id); });
       tasksEl.appendChild(el);
     });
   }
 
-  // ===== Панель =====
+  // ===== ПАНЕЛЬ ДЕТАЛЕЙ =====
   function openPanel(id) {
     const item = findById(id);
     if (!item) { closePanel(); return; }
-
     openTaskId = id;
     const d = new Date(item.date);
-    const links = item.links || [];
-
     panelContent.textContent = '';
 
-    const h2 = document.createElement('h2');
-    h2.textContent = `${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}`;
+    const h2 = document.createElement('h2'); h2.textContent = `${d.getDate()} ${MONTHS[d.getMonth()].toLowerCase()}`;
+    const nameEl = document.createElement('div'); nameEl.className = 'detail-name'; nameEl.textContent = item.name;
+    panelContent.appendChild(h2); panelContent.appendChild(nameEl);
 
-    const nameEl = document.createElement('div');
-    nameEl.className = 'detail-name';
-    nameEl.textContent = item.name;
-
-    panelContent.appendChild(h2);
-    panelContent.appendChild(nameEl);
-
-    if (links.length > 0) {
-      const list = document.createElement('div');
-      list.className = 'links-list';
-      links.forEach((l, i) => {
+    if (item.links && item.links.length > 0) {
+      const list = document.createElement('div'); list.className = 'links-list';
+      item.links.forEach((l, i) => {
         const href = safeUrl(l.url);
-        const a = document.createElement('a');
-        a.className = 'link-item';
-        a.target = '_blank';
-        a.rel = 'noopener noreferrer';
-
-        const num = document.createElement('span');
-        num.className = 'link-num';
-        num.textContent = `[${i+1}]`;
-
-        const status = document.createElement('span');
-        status.className = 'link-status';
-        status.dataset.url = l.url;
-        status.textContent = '';
-
-        if (href) {
-          a.href = href;
-          a.appendChild(num);
-          a.appendChild(document.createTextNode(l.name));
-        } else {
-          a.appendChild(num);
-          a.appendChild(document.createTextNode(l.name + ' (ссылка недоступна)'));
-          a.style.color = '#6c6c78';
-          a.style.cursor = 'default';
-        }
-
-        // Вставляем статус внутрь <a>, но клики по нему не должны уходить
-        a.appendChild(status);
-        list.appendChild(a);
+        const a = document.createElement('a'); a.className = 'link-item'; a.target = '_blank'; a.rel = 'noopener noreferrer';
+        const num = document.createElement('span'); num.className = 'link-num'; num.textContent = `[${i+1}]`;
+        const status = document.createElement('span'); status.className = 'link-status'; status.dataset.url = l.url; status.textContent = '';
+        if (href) { a.href = href; a.appendChild(num); a.appendChild(document.createTextNode(l.name)); } else { a.appendChild(num); a.appendChild(document.createTextNode(l.name + ' (недоступна)')); a.style.color = '#6c6c78'; }
+        a.appendChild(status); list.appendChild(a);
       });
       panelContent.appendChild(list);
-
-      // Асинхронно проверяем все ссылки и обновляем статусы
-      links.forEach(async (l, i) => {
+      item.links.forEach(async (l) => {
         const statusEl = list.querySelector(`.link-status[data-url="${CSS.escape(l.url)}"]`);
         if (!statusEl) return;
-        statusEl.className = 'link-status checking';
-        statusEl.textContent = '⏳';
+        statusEl.className = 'link-status checking'; statusEl.textContent = '⏳';
         const r = await checkLink(l.url);
         statusEl.className = 'link-status ' + (r.ok ? 'ok' : 'bad');
-        statusEl.textContent = r.ok ? '✓' : '✗';
-        statusEl.title = r.reason;
+        statusEl.textContent = r.ok ? '✓' : '✗'; statusEl.title = r.reason;
       });
     }
 
     if (item.pdf) {
-      const block = document.createElement('div');
-      block.className = 'pdf-block';
-
-      const title = document.createElement('div');
-      title.className = 'pdf-title';
-      title.textContent = 'PDF-файл';
-
-      const nm = document.createElement('div');
-      nm.className = 'pdf-name';
-      nm.textContent = item.pdf.name;
-
-      const sz = document.createElement('div');
-      sz.className = 'pdf-size';
-      sz.textContent = formatBytes(item.pdf.size);
-
-      const acts = document.createElement('div');
-      acts.className = 'pdf-actions';
-
-      const openBtn = document.createElement('button');
-      openBtn.className = 'open';
-      openBtn.type = 'button';
-      openBtn.textContent = 'Открыть';
-      openBtn.addEventListener('click', () => openPdf(item.pdf));
-
-      const rmBtn = document.createElement('button');
-      rmBtn.className = 'remove';
-      rmBtn.type = 'button';
-      rmBtn.textContent = 'Убрать';
-      rmBtn.addEventListener('click', () => {
-        if (!confirm('Удалить PDF из этого дедлайна?')) return;
-        item.pdf = null;
-        if (save()) {
-          renderTasks();
-          openPanel(item.id);
-        }
+      const block = document.createElement('div'); block.className = 'pdf-block';
+      block.innerHTML = `<div class="pdf-title">PDF-файл</div><div class="pdf-name">${escapeHtml(item.pdf.name)}</div><div class="pdf-size">${formatBytes(item.pdf.size)}</div><div class="pdf-actions"><button class="open" type="button">Открыть</button><button class="remove" type="button">Убрать</button></div>`;
+      block.querySelector('.open').addEventListener('click', () => openPdf(item.pdf));
+      block.querySelector('.remove').addEventListener('click', () => {
+        if (!confirm('Удалить PDF?')) return;
+        item.pdf = null; save(); renderTasks(); openPanel(item.id);
       });
-
-      acts.appendChild(openBtn);
-      acts.appendChild(rmBtn);
-
-      block.appendChild(title);
-      block.appendChild(nm);
-      block.appendChild(sz);
-      block.appendChild(acts);
       panelContent.appendChild(block);
     }
 
-    const actions = document.createElement('div');
-    actions.className = 'panel-actions';
+    // AI-блок
+    panelContent.appendChild(renderAiBlock(panelContent, item));
 
-    const editBtn = document.createElement('button');
-    editBtn.className = 'edit';
-    editBtn.type = 'button';
-    editBtn.textContent = 'Редактировать';
-    editBtn.addEventListener('click', () => openModal(item.id));
-
-    const delBtn = document.createElement('button');
-    delBtn.className = 'delete';
-    delBtn.type = 'button';
-    delBtn.textContent = 'Удалить';
-    delBtn.addEventListener('click', () => {
-      if (!confirm('Удалить этот дедлайн?')) return;
-      removeById(item.id);
-      save();
-      closePanel();
-      renderCalendar();
-      renderTasks();
-    });
-
-    actions.appendChild(editBtn);
-    actions.appendChild(delBtn);
-    panelContent.appendChild(actions);
-
-    panel.classList.add('open');
-    appEl.classList.add('shifted');
+    const actions = document.createElement('div'); actions.className = 'panel-actions';
+    const editBtn = document.createElement('button'); editBtn.className = 'edit'; editBtn.type = 'button'; editBtn.textContent = 'Редактировать'; editBtn.addEventListener('click', () => openModal(item.id));
+    const delBtn = document.createElement('button'); delBtn.className = 'delete'; delBtn.type = 'button'; delBtn.textContent = 'Удалить'; delBtn.addEventListener('click', () => { if (!confirm('Удалить?')) return; removeById(item.id); save(); closePanel(); renderCalendar(); renderTasks(); });
+    actions.appendChild(editBtn); actions.appendChild(delBtn); panelContent.appendChild(actions);
+    panel.classList.add('open'); appEl.classList.add('shifted');
   }
 
   function closePanel() {
-    openTaskId = null;
-    panel.classList.remove('open');
-    appEl.classList.remove('shifted');
+    openTaskId = null; panel.classList.remove('open'); appEl.classList.remove('shifted');
   }
 
   // ===== PDF =====
@@ -1158,412 +503,177 @@
       const bin = atob(b64);
       const bytes = new Uint8Array(bin.length);
       for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-
       const blob = new Blob([bytes], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const w = window.open(url, '_blank');
       setTimeout(() => URL.revokeObjectURL(url), 60000);
       if (!w) alert('Разреши всплывающие окна, чтобы открыть PDF.');
-    } catch (e) {
-      alert('Не удалось открыть PDF: ' + e.message);
-    }
+    } catch (e) { alert('Не удалось открыть PDF: ' + e.message); }
   }
 
-  // ===== Модалка =====
-  function autoGrow(el) {
-    el.style.height = 'auto';
-    el.style.height = Math.min(el.scrollHeight, 300) + 'px';
-  }
+  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function escapeAttr(s) { return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;'); }
 
-  function updateCounter(input, counterEl, max) {
-    const len = input.value.length;
-    counterEl.textContent = `${len}/${max}`;
-    counterEl.classList.toggle('over', len > max);
-  }
+  // ===== МОДАЛКА =====
+  function autoGrow(el) { el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 300) + 'px'; }
+  function updateCounter(input, counterEl, max) { const len = input.value.length; counterEl.textContent = `${len}/${max}`; counterEl.classList.toggle('over', len > max); }
 
-  inSubject.addEventListener('input', () => {
-    if (inSubject.value.length > LIMITS.subject) inSubject.value = inSubject.value.slice(0, LIMITS.subject);
-    updateCounter(inSubject, cntSubject, LIMITS.subject);
-    errSubject.textContent = '';
-    inSubject.classList.remove('invalid');
-  });
-
-  inName.addEventListener('input', () => {
-    if (inName.value.length > LIMITS.name) inName.value = inName.value.slice(0, LIMITS.name);
-    autoGrow(inName);
-    updateCounter(inName, cntName, LIMITS.name);
-    errName.textContent = '';
-    inName.classList.remove('invalid');
-  });
-
-  inLinks.addEventListener('input', () => {
-    if (inLinks.value.length > LIMITS.linksRaw) inLinks.value = inLinks.value.slice(0, LIMITS.linksRaw);
-    autoGrow(inLinks);
-    updateCounter(inLinks, cntLinks, LIMITS.linksRaw);
-    errLinks.textContent = '';
-    inLinks.classList.remove('invalid');
-  });
+  inSubject.addEventListener('input', () => { if (inSubject.value.length > LIMITS.subject) inSubject.value = inSubject.value.slice(0, LIMITS.subject); updateCounter(inSubject, cntSubject, LIMITS.subject); errSubject.textContent = ''; inSubject.classList.remove('invalid'); });
+  inName.addEventListener('input', () => { if (inName.value.length > LIMITS.name) inName.value = inName.value.slice(0, LIMITS.name); autoGrow(inName); updateCounter(inName, cntName, LIMITS.name); errName.textContent = ''; inName.classList.remove('invalid'); });
+  inLinks.addEventListener('input', () => { if (inLinks.value.length > LIMITS.linksRaw) inLinks.value = inLinks.value.slice(0, LIMITS.linksRaw); autoGrow(inLinks); updateCounter(inLinks, cntLinks, LIMITS.linksRaw); errLinks.textContent = ''; inLinks.classList.remove('invalid'); });
 
   function renderPdfPreview() {
     pdfWrap.querySelectorAll('.pdf-current').forEach(el => el.remove());
-
     if (pendingPdf) {
-      pdfWrap.classList.add('has-file');
-      pdfHint.style.display = 'none';
-
-      const cur = document.createElement('div');
-      cur.className = 'pdf-current';
-
-      const info = document.createElement('div');
-      info.className = 'info';
-      const nm = document.createElement('div');
-      nm.className = 'name';
-      nm.textContent = pendingPdf.name;
-      const sz = document.createElement('div');
-      sz.className = 'size';
-      sz.textContent = formatBytes(pendingPdf.size);
-      info.appendChild(nm);
-      info.appendChild(sz);
-
-      const rm = document.createElement('button');
-      rm.className = 'remove-btn';
-      rm.type = 'button';
-      rm.textContent = '×';
-      rm.title = 'Убрать файл';
-      rm.addEventListener('click', (e) => {
-        e.stopPropagation();
-        pendingPdf = null;
-        pdfRemoved = true;
-        renderPdfPreview();
-      });
-
-      cur.appendChild(info);
-      cur.appendChild(rm);
-      pdfWrap.appendChild(cur);
-    } else {
-      pdfWrap.classList.remove('has-file');
-      pdfHint.style.display = '';
-    }
+      pdfWrap.classList.add('has-file'); pdfHint.style.display = 'none';
+      const cur = document.createElement('div'); cur.className = 'pdf-current';
+      const info = document.createElement('div'); info.className = 'info';
+      const nm = document.createElement('div'); nm.className = 'name'; nm.textContent = pendingPdf.name;
+      const sz = document.createElement('div'); sz.className = 'size'; sz.textContent = formatBytes(pendingPdf.size);
+      info.appendChild(nm); info.appendChild(sz);
+      const rm = document.createElement('button'); rm.className = 'remove-btn'; rm.type = 'button'; rm.textContent = '×'; rm.title = 'Убрать файл';
+      rm.addEventListener('click', (e) => { e.stopPropagation(); pendingPdf = null; pdfRemoved = true; renderPdfPreview(); });
+      cur.appendChild(info); cur.appendChild(rm); pdfWrap.appendChild(cur);
+    } else { pdfWrap.classList.remove('has-file'); pdfHint.style.display = ''; }
   }
 
   function readPdfFile(file) {
     return new Promise((resolve, reject) => {
       if (!file) return resolve(null);
-      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
-        return reject(new Error('Можно прикреплять только PDF-файлы'));
-      }
-      if (file.size > LIMITS.pdfBytes) {
-        return reject(new Error(`Файл больше ${formatBytes(LIMITS.pdfBytes)}`));
-      }
+      if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) return reject(new Error('Можно прикреплять только PDF-файлы'));
+      if (file.size > LIMITS.pdfBytes) return reject(new Error(`Файл больше ${formatBytes(LIMITS.pdfBytes)}`));
       const reader = new FileReader();
-      reader.onload = () => resolve({
-        name: clampStr(file.name, 200),
-        size: file.size,
-        data: reader.result
-      });
+      reader.onload = () => resolve({ name: clampStr(file.name, 200), size: file.size, data: reader.result });
       reader.onerror = () => reject(new Error('Не удалось прочитать файл'));
       reader.readAsDataURL(file);
     });
   }
 
   pdfWrap.addEventListener('click', () => inPdf.click());
-
-  pdfWrap.addEventListener('dragover', (e) => {
-    e.preventDefault();
-    pdfWrap.style.borderColor = '#4a90e2';
-  });
-  pdfWrap.addEventListener('dragleave', () => {
-    pdfWrap.style.borderColor = '';
-  });
+  pdfWrap.addEventListener('dragover', (e) => { e.preventDefault(); pdfWrap.style.borderColor = '#4a90e2'; });
+  pdfWrap.addEventListener('dragleave', () => { pdfWrap.style.borderColor = ''; });
   pdfWrap.addEventListener('drop', async (e) => {
-    e.preventDefault();
-    pdfWrap.style.borderColor = '';
+    e.preventDefault(); pdfWrap.style.borderColor = '';
     const file = e.dataTransfer.files && e.dataTransfer.files[0];
     if (!file) return;
-    try {
-      pendingPdf = await readPdfFile(file);
-      pdfRemoved = false;
-      errPdf.textContent = '';
-      renderPdfPreview();
-    } catch (err) {
-      errPdf.textContent = err.message;
-    }
+    try { pendingPdf = await readPdfFile(file); pdfRemoved = false; errPdf.textContent = ''; renderPdfPreview(); } catch (err) { errPdf.textContent = err.message; }
   });
 
   inPdf.addEventListener('change', async () => {
     const file = inPdf.files && inPdf.files[0];
     if (!file) return;
-    try {
-      pendingPdf = await readPdfFile(file);
-      pdfRemoved = false;
-      errPdf.textContent = '';
-      renderPdfPreview();
-    } catch (err) {
-      errPdf.textContent = err.message;
-    }
+    try { pendingPdf = await readPdfFile(file); pdfRemoved = false; errPdf.textContent = ''; renderPdfPreview(); } catch (err) { errPdf.textContent = err.message; }
     inPdf.value = '';
   });
 
   function resetModal() {
-    inSubject.value = '';
-    inName.value = '';
-    inLinks.value = '';
-    inName.style.height = '';
-    inLinks.style.height = '';
-    selectedPriority = 3;
-    prioRow.querySelectorAll('.prio-btn').forEach(b => {
-      b.classList.toggle('active', b.dataset.p === '3');
-    });
-    pendingPdf = null;
-    pdfRemoved = false;
-    renderPdfPreview();
-    errSubject.textContent = '';
-    errName.textContent = '';
-    errLinks.textContent = '';
-    errPdf.textContent = '';
-    inSubject.classList.remove('invalid');
-    inName.classList.remove('invalid');
-    inLinks.classList.remove('invalid');
-    updateCounter(inSubject, cntSubject, LIMITS.subject);
-    updateCounter(inName, cntName, LIMITS.name);
-    updateCounter(inLinks, cntLinks, LIMITS.linksRaw);
+    inSubject.value = ''; inName.value = ''; inLinks.value = ''; inName.style.height = ''; inLinks.style.height = '';
+    selectedPriority = 3; prioRow.querySelectorAll('.prio-btn').forEach(b => { b.classList.toggle('active', b.dataset.p === '3'); });
+    pendingPdf = null; pdfRemoved = false; renderPdfPreview();
+    errSubject.textContent = ''; errName.textContent = ''; errLinks.textContent = ''; errPdf.textContent = '';
+    inSubject.classList.remove('invalid'); inName.classList.remove('invalid'); inLinks.classList.remove('invalid');
+    updateCounter(inSubject, cntSubject, LIMITS.subject); updateCounter(inName, cntName, LIMITS.name); updateCounter(inLinks, cntLinks, LIMITS.linksRaw);
   }
 
   function openModal(id) {
     if (id) {
       const item = findById(id);
       if (!item) return;
-      editingId = id;
-      modalTitle.textContent = 'Редактировать дедлайн';
-      inSubject.value = item.subject || '';
-      inName.value = item.name || '';
-      inLinks.value = linksToString(item.links);
+      editingId = id; modalTitle.textContent = 'Редактировать дедлайн';
+      inSubject.value = item.subject || ''; inName.value = item.name || ''; inLinks.value = linksToString(item.links);
       selectedPriority = item.priority || 3;
-      prioRow.querySelectorAll('.prio-btn').forEach(b => {
-        b.classList.toggle('active', +b.dataset.p === selectedPriority);
-      });
-      pendingPdf = item.pdf ? { ...item.pdf } : null;
-      pdfRemoved = false;
-      renderPdfPreview();
-      errSubject.textContent = '';
-      errName.textContent = '';
-      errLinks.textContent = '';
-      errPdf.textContent = '';
-      updateCounter(inSubject, cntSubject, LIMITS.subject);
-      updateCounter(inName, cntName, LIMITS.name);
-      updateCounter(inLinks, cntLinks, LIMITS.linksRaw);
-      setTimeout(() => {
-        autoGrow(inName);
-        autoGrow(inLinks);
-      }, 0);
+      prioRow.querySelectorAll('.prio-btn').forEach(b => { b.classList.toggle('active', +b.dataset.p === selectedPriority); });
+      pendingPdf = item.pdf ? { ...item.pdf } : null; pdfRemoved = false; renderPdfPreview();
+      errSubject.textContent = ''; errName.textContent = ''; errLinks.textContent = ''; errPdf.textContent = '';
+      updateCounter(inSubject, cntSubject, LIMITS.subject); updateCounter(inName, cntName, LIMITS.name); updateCounter(inLinks, cntLinks, LIMITS.linksRaw);
+      setTimeout(() => { autoGrow(inName); autoGrow(inLinks); }, 0);
     } else {
-      editingId = null;
-      modalTitle.textContent = 'Новый дедлайн';
-      resetModal();
+      editingId = null; modalTitle.textContent = 'Новый дедлайн'; resetModal();
     }
-    modalBg.classList.add('open');
-    inSubject.focus();
+    modalBg.classList.add('open'); inSubject.focus();
   }
 
-  function closeModal() {
-    modalBg.classList.remove('open');
-    editingId = null;
-    pendingPdf = null;
-    pdfRemoved = false;
-  }
+  function closeModal() { modalBg.classList.remove('open'); editingId = null; pendingPdf = null; pdfRemoved = false; }
 
   prioRow.addEventListener('click', e => {
-    const btn = e.target.closest('.prio-btn');
-    if (!btn) return;
+    const btn = e.target.closest('.prio-btn'); if (!btn) return;
     prioRow.querySelectorAll('.prio-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    selectedPriority = +btn.dataset.p;
+    btn.classList.add('active'); selectedPriority = +btn.dataset.p;
   });
 
-  // ===== Навигация =====
-  document.getElementById('prev').addEventListener('click', () => {
-    currentMonth--;
-    if (currentMonth < 0) { currentMonth = 11; currentYear--; }
-    renderCalendar();
-  });
-  document.getElementById('next').addEventListener('click', () => {
-    currentMonth++;
-    if (currentMonth > 11) { currentMonth = 0; currentYear++; }
-    renderCalendar();
-  });
-
-  addBtn.addEventListener('click', () => {
-    if (!selectedDate) { alert('Сначала выбери день в календаре'); return; }
-    if (addBtn.disabled) return;
-    openModal(null);
-  });
-
+  document.getElementById('prev').addEventListener('click', () => { currentMonth--; if (currentMonth < 0) { currentMonth = 11; currentYear--; } renderCalendar(); });
+  document.getElementById('next').addEventListener('click', () => { currentMonth++; if (currentMonth > 11) { currentMonth = 0; currentYear++; } renderCalendar(); });
+  addBtn.addEventListener('click', () => { if (!selectedDate) { alert('Сначала выбери день в календаре'); return; } if (addBtn.disabled) return; openModal(null); });
   document.getElementById('cancel').addEventListener('click', closeModal);
-
-  modalBg.addEventListener('mousedown', (e) => {
-    if (e.target === modalBg) closeModal();
-  });
-
+  modalBg.addEventListener('mousedown', (e) => { if (e.target === modalBg) closeModal(); });
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    if (checkOverlay.classList.contains('open')) {
-      // отменяем проверку — просто закрываем оверлей
-      checkOverlay.classList.remove('open');
-      return;
-    }
-    if (modalBg.classList.contains('open')) closeModal();
-    else if (openTaskId) closePanel();
+    if (checkOverlay.classList.contains('open')) { checkOverlay.classList.remove('open'); return; }
+    if (modalBg.classList.contains('open')) closeModal(); else if (openTaskId) closePanel();
   });
 
-  // ===== Оверлей проверки ссылок =====
+  // ===== ПРОВЕРКА ССЫЛОК ОВЕРЛЕЙ =====
   function openCheckOverlay(links) {
     checkList.textContent = '';
     links.forEach((l, i) => {
-      const row = document.createElement('div');
-      row.className = 'check-row checking';
-      row.dataset.idx = i;
-
-      const icon = document.createElement('span');
-      icon.className = 'icon';
-      icon.innerHTML = '<span class="spinner"></span>';
-
-      const url = document.createElement('span');
-      url.className = 'url';
-      url.textContent = l.url;
-      url.title = l.url;
-
-      row.appendChild(icon);
-      row.appendChild(url);
-      checkList.appendChild(row);
+      const row = document.createElement('div'); row.className = 'check-row checking'; row.dataset.idx = i;
+      const icon = document.createElement('span'); icon.className = 'icon'; icon.innerHTML = '<span class="spinner"></span>';
+      const url = document.createElement('span'); url.className = 'url'; url.textContent = l.url; url.title = l.url;
+      row.appendChild(icon); row.appendChild(url); checkList.appendChild(row);
     });
-    checkProceed.disabled = true;
-    checkOverlay.classList.add('open');
+    checkProceed.disabled = true; checkOverlay.classList.add('open');
   }
 
   function updateCheckRow(i, result) {
-    const row = checkList.querySelector(`.check-row[data-idx="${i}"]`);
-    if (!row) return;
-    row.classList.remove('checking', 'ok', 'bad');
-    row.classList.add(result.ok ? 'ok' : 'bad');
-    const icon = row.querySelector('.icon');
-    icon.textContent = result.ok ? '✓' : '✗';
-    row.title = result.reason;
+    const row = checkList.querySelector(`.check-row[data-idx="${i}"]`); if (!row) return;
+    row.classList.remove('checking', 'ok', 'bad'); row.classList.add(result.ok ? 'ok' : 'bad');
+    const icon = row.querySelector('.icon'); icon.textContent = result.ok ? '✓' : '✗'; row.title = result.reason;
   }
 
-  checkCancel.addEventListener('click', () => {
-    checkOverlay.classList.remove('open');
-  });
+  checkCancel.addEventListener('click', () => { checkOverlay.classList.remove('open'); });
+  let pendingProceed = null;
+  checkProceed.addEventListener('click', () => { checkOverlay.classList.remove('open'); if (pendingProceed) { const fn = pendingProceed; pendingProceed = null; fn(); } });
 
-  let pendingProceed = null;   // функция, которую вызовем по «Сохранить всё равно»
-  checkProceed.addEventListener('click', () => {
-    checkOverlay.classList.remove('open');
-    if (pendingProceed) {
-      const fn = pendingProceed;
-      pendingProceed = null;
-      fn();
-    }
-  });
-
-  // ===== Сохранение =====
+  // ===== СОХРАНЕНИЕ =====
   document.getElementById('save').addEventListener('click', async () => {
     let ok = true;
-
-    const subject = inSubject.value.trim();
-    const name = inName.value.trim();
-
-    if (!subject) {
-      errSubject.textContent = 'Укажи предмет';
-      inSubject.classList.add('invalid');
-      ok = false;
-    }
-    if (subject.length > LIMITS.subject) {
-      errSubject.textContent = `Максимум ${LIMITS.subject} символов`;
-      inSubject.classList.add('invalid');
-      ok = false;
-    }
-    if (!name) {
-      errName.textContent = 'Опиши задание';
-      inName.classList.add('invalid');
-      ok = false;
-    }
-    if (name.length > LIMITS.name) {
-      errName.textContent = `Максимум ${LIMITS.name} символов`;
-      inName.classList.add('invalid');
-      ok = false;
-    }
-
+    const subject = inSubject.value.trim(); const name = inName.value.trim();
+    if (!subject) { errSubject.textContent = 'Укажи предмет'; inSubject.classList.add('invalid'); ok = false; }
+    if (subject.length > LIMITS.subject) { errSubject.textContent = `Максимум ${LIMITS.subject} символов`; inSubject.classList.add('invalid'); ok = false; }
+    if (!name) { errName.textContent = 'Опиши задание'; inName.classList.add('invalid'); ok = false; }
+    if (name.length > LIMITS.name) { errName.textContent = `Максимум ${LIMITS.name} символов`; inName.classList.add('invalid'); ok = false; }
     const { links, errors } = parseLinks(inLinks.value);
-    if (errors.length > 0) {
-      errLinks.textContent = errors[0] + (errors.length > 1 ? ` (и ещё ${errors.length - 1})` : '');
-      inLinks.classList.add('invalid');
-      ok = false;
-    }
-
+    if (errors.length > 0) { errLinks.textContent = errors[0] + (errors.length > 1 ? ` (и ещё ${errors.length - 1})` : ''); inLinks.classList.add('invalid'); ok = false; }
     if (!ok) return;
-
-    // Если ссылок нет — сохраняем сразу
-    if (links.length === 0) {
-      doSave(subject, name, links);
-      return;
-    }
-
-    // Иначе — сначала проверка
+    if (links.length === 0) { doSave(subject, name, links); return; }
     openCheckOverlay(links);
     const { allOk } = await checkLinksWithUI(links, updateCheckRow);
-
-    if (allOk) {
-      // все ок — закрываем оверлей и сохраняем
-      checkOverlay.classList.remove('open');
-      doSave(subject, name, links);
-    } else {
-      // есть проблемные — даём выбор
-      checkProceed.disabled = false;
-      pendingProceed = () => doSave(subject, name, links);
-    }
+    if (allOk) { checkOverlay.classList.remove('open'); doSave(subject, name, links); }
+    else { checkProceed.disabled = false; pendingProceed = () => doSave(subject, name, links); }
   });
 
   function doSave(subject, name, links) {
     let finalPdf = null;
     if (pendingPdf) finalPdf = pendingPdf;
     else if (editingId && pdfRemoved) finalPdf = null;
-    else if (editingId) {
-      const cur = findById(editingId);
-      finalPdf = cur ? cur.pdf : null;
-    }
-
+    else if (editingId) { const cur = findById(editingId); finalPdf = cur ? cur.pdf : null; }
     if (editingId) {
       const item = findById(editingId);
-      if (item) {
-        item.subject = subject;
-        item.name = name;
-        item.links = links;
-        item.priority = selectedPriority;
-        item.pdf = finalPdf;
-      }
+      if (item) { item.subject = subject; item.name = name; item.links = links; item.priority = selectedPriority; item.pdf = finalPdf; }
     } else {
-      deadlines.push({
-        id: uid(),
-        date: selectedDate,
-        subject, name, links,
-        priority: selectedPriority,
-        pdf: finalPdf
-      });
+      deadlines.push({ id: uid(), date: selectedDate, subject, name, links, priority: selectedPriority, pdf: finalPdf, aiData: null });
     }
-
     if (!save()) return;
-    closeModal();
-    renderCalendar();
-    renderTasks();
+    closeModal(); renderCalendar(); renderTasks();
     if (openTaskId) openPanel(openTaskId);
   }
 
   document.getElementById('close-panel').addEventListener('click', closePanel);
 
-  // ===== Инициализация =====
+  // ===== ИНИЦИАЛИЗАЦИЯ =====
   selectedDate = fmt(today.getFullYear(), today.getMonth(), today.getDate());
-  renderCalendar();
-  renderTasks();
-  resetModal();
+  renderCalendar(); renderTasks(); resetModal();
 </script>
 </body>
 </html>
+```
